@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**conni** is an Oclif-based CLI tool for interacting with Confluence REST API. It provides comprehensive access to Confluence functionality including issues, projects, boards, sprints, comments, attachments, and worklogs.
+**conni** is an Oclif-based CLI tool for interacting with Confluence REST API. It provides comprehensive access to Confluence functionality including pages, spaces, comments, and attachments.
 
 ## Development Commands
 
@@ -17,6 +17,9 @@ npm test
 
 # Run a single test file
 npx mocha test/path/to/test.test.ts
+
+# Run tests with coverage
+npm run test:coverage
 
 # Lint and format
 npm run lint
@@ -32,13 +35,15 @@ The project follows a layered architecture with clear separation of concerns:
 
 ```
 src/
-├── commands/         # Oclif CLI commands (user-facing)
+├── commands/conni/   # Oclif CLI commands organized by domain
+│   ├── auth/         # Authentication commands (add, update, test)
+│   ├── content/      # Page commands (get, search, create, update, delete, comment, attachment)
+│   └── space/        # Space commands (get, list)
 ├── conni/            # Confluence REST API layer
 │   ├── conni-api.ts      # ConniApi class with core API methods
 │   └── conni-client.ts   # Wrapper functions with singleton pattern
 ├── config.ts        # Configuration management (auth config)
-├── format.ts        # Output formatting (TOON format)
-└── utils.ts         # Shared utilities (issue processing, defaults)
+└── format.ts        # Output formatting (TOON format)
 ```
 
 ### Key Architectural Patterns
@@ -89,7 +94,7 @@ static override args = {
 /* eslint-enable perfectionist/sort-objects */
 ```
 
-Example pattern from `src/commands/conni/issue/get.ts`:
+Example pattern from `src/commands/conni/content/get.ts`:
 
 ```typescript
 import {Args, Command, Flags} from '@oclif/core'
@@ -129,11 +134,6 @@ export default class ContentGet extends Command {
 1. Add method to `ConniApi` class in `conni-api.ts`
 2. Export wrapper function in corresponding `conni-client.ts` with `initConni` pattern
 3. Use `ApiResult` return type for consistent error handling
-
-For methods that return issues, use the shared utilities from `utils.ts`:
-
-- `defaultFields` — base set of fields always included in issue queries
-- `processContentRenderedAndFields(issue)` — merges `renderedFields` (HTML→Markdown via `turndown`) into `fields`, strips empty custom fields. Call this on each issue before returning.
 
 ## Configuration
 
@@ -176,7 +176,7 @@ Authentication config is stored in JSON at `~/.config/conni/conni-config.json` (
 
 ## Dependencies
 
-- **conni.js** v5 - Confluence API client library
+- **confluence.js** v2 - Confluence API client library (`ConfluenceClient` from `confluence.js`)
 - **@oclif/core** - CLI framework
 - **marklassian** - Markdown to ADF conversion
 - **@toon-format/toon** - TOON output format
