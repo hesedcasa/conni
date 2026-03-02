@@ -26,7 +26,7 @@ $ npm install -g @hesed/conni
 $ conni COMMAND
 running command...
 $ conni (--version)
-@hesed/conni/0.1.0 darwin-arm64 node-v22.14.0
+@hesed/conni/0.1.0 linux-x64 node-v20.20.0
 $ conni --help [COMMAND]
 USAGE
   $ conni COMMAND
@@ -59,12 +59,12 @@ Add Atlassian authentication
 
 ```
 USAGE
-  $ conni conni auth add [--json] [-e <value>] [-t <value>] [-u <value>]
+  $ conni conni auth add -e <value> -t <value> -u <value> [--json]
 
 FLAGS
-  -e, --email=<value>  Account email:
-  -t, --token=<value>  API Token:
-  -u, --url=<value>    Atlassian URL (start with https://):
+  -e, --email=<value>  (required) Account email:
+  -t, --token=<value>  (required) API Token:
+  -u, --url=<value>    (required) Atlassian URL (start with https://):
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -104,12 +104,12 @@ Update existing authentication
 
 ```
 USAGE
-  $ conni conni auth update [--json] [-e <value>] [-t <value>] [-u <value>]
+  $ conni conni auth update -e <value> -t <value> -u <value> [--json]
 
 FLAGS
-  -e, --email=<value>  Account email
-  -t, --token=<value>  API Token
-  -u, --url=<value>    Atlassian instance URL (start with https://)
+  -e, --email=<value>  (required) Account email
+  -t, --token=<value>  (required) API Token
+  -u, --url=<value>    (required) Atlassian instance URL (start with https://)
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -231,7 +231,7 @@ _See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hes
 
 ## `conni conni content comment-update ID BODY`
 
-Update a comment
+Update a comment in Confluence content
 
 ```
 USAGE
@@ -245,7 +245,7 @@ FLAGS
   --toon  Format output as toon
 
 DESCRIPTION
-  Update a comment
+  Update a comment in Confluence content
 
 EXAMPLES
   $ conni conni content comment-update 1544224770 "
