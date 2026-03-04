@@ -57,9 +57,6 @@
     "bin": "conni",
     "dirname": "conni",
     "commands": "./dist/commands",
-    "plugins": [
-      "@oclif/plugin-*"
-    ],
     "topicSeparator": " ",
     "topics": {},
     "update": {
