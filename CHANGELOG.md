@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/hesedcasa/conni/compare/v0.2.0...v0.2.1) (2026-03-04)
+
+
+### 🛠️ Fixes
+
+* remove unused oclif plugin ([69dbf6d](https://github.com/hesedcasa/conni/commit/69dbf6d55a639c6f81a2dff715913e54d8cd1541))
+
 ## [0.2.0](https://github.com/hesedcasa/conni/compare/v0.1.0...v0.2.0) (2026-03-02)
 
 
