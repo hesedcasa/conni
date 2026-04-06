@@ -142,13 +142,13 @@ export class ConniApi {
       const status = fields.status as string | undefined
 
       const contentBody = {
+        ancestors: parentId ? [{id: parentId}] : undefined,
         body: {
           storage: {
             representation: 'atlas_doc_format',
             value: JSON.stringify(bodyContent),
           },
         },
-        parentId,
         space: {key: spaceKey},
         status,
         title,

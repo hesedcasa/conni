@@ -10,6 +10,7 @@ export default class ContentCreate extends Command {
   static override examples = [
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="New title" body="New description" status="draft"',
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="New title" body=\'\n# Header\n## Sub-header\n- Item 1\n- Item 2\n```bash\nls -a\n```\'',
+    '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Child page" body="Content" parentId="123456"',
   ]
   static override flags = {
     fields: Flags.string({
