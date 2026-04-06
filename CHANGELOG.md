@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/hesedcasa/conni/compare/v0.2.1...v0.3.0) (2026-04-06)
+
+
+### 🎉 Features
+
+* add parentId example and fix ancestors field in create command ([#23](https://github.com/hesedcasa/conni/issues/23)) ([6042f3a](https://github.com/hesedcasa/conni/commit/6042f3a7587040b00ce000303a51a5ffab783b2f))
+
 ## [0.2.1](https://github.com/hesedcasa/conni/compare/v0.2.0...v0.2.1) (2026-03-04)
 
 
