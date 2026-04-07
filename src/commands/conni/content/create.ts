@@ -52,10 +52,9 @@ export default class ContentCreate extends Command {
       }
     }
 
-    const result =
-      flags.attach && flags.attach.length > 0
-        ? await createPageWithMedia(config.auth, fields, flags.attach)
-        : await createPage(config.auth, fields)
+    const result = flags.attach
+      ? await createPageWithMedia(config.auth, fields, flags.attach)
+      : await createPage(config.auth, fields)
     clearClients()
 
     if (flags.toon) {
