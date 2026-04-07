@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/hesedcasa/conni/compare/v0.3.0...v0.3.1) (2026-04-07)
+
+
+### 📄 Documentation
+
+* update README with optional auth flags and platform info ([#25](https://github.com/hesedcasa/conni/issues/25)) ([4c744f4](https://github.com/hesedcasa/conni/commit/4c744f4d8db75fe7b247e3a6040fb2d7e415c94f))
+
 ## [0.3.0](https://github.com/hesedcasa/conni/compare/v0.2.1...v0.3.0) (2026-04-06)
 
 
