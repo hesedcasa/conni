@@ -1,7 +1,7 @@
 import {Command, Flags} from '@oclif/core'
 
 import {readConfig} from '../../../config.js'
-import {clearClients, createPage} from '../../../conni/conni-client.js'
+import {clearClients, createPage, createPageWithMedia} from '../../../conni/conni-client.js'
 import {formatAsToon} from '../../../format.js'
 
 export default class ContentCreate extends Command {
@@ -11,8 +11,15 @@ export default class ContentCreate extends Command {
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="New title" body="New description" status="draft"',
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="New title" body=\'\n# Header\n## Sub-header\n- Item 1\n- Item 2\n```bash\nls -a\n```\'',
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Child page" body="Content" parentId="123456"',
+    '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Page with image" body="See the diagram:\n![diagram](./diagram.png)" --attach ./diagram.png',
+    '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Page with files" body="Content" --attach ./image.png --attach ./report.pdf',
   ]
   static override flags = {
+    attach: Flags.string({
+      description: 'Path to a file to upload and embed inline (can be used multiple times)',
+      multiple: true,
+      required: false,
+    }),
     fields: Flags.string({
       description: 'Minimum fields required: spaceKey, title & body',
       multiple: true,
@@ -45,7 +52,9 @@ export default class ContentCreate extends Command {
       }
     }
 
-    const result = await createPage(config.auth, fields)
+    const result = flags.attach
+      ? await createPageWithMedia(config.auth, fields, flags.attach)
+      : await createPage(config.auth, fields)
     clearClients()
 
     if (flags.toon) {

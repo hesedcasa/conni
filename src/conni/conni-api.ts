@@ -132,41 +132,85 @@ export class ConniApi {
   async createPage(fields: Record<string, unknown>): Promise<ApiResult> {
     try {
       const client = this.getClient()
-
-      // Convert Markdown body to Confluence ADF
-      // eslint-disable-next-line unicorn/prefer-string-replace-all
-      const bodyContent = markdownToAdf((fields.body as string).replace(/\\n/g, '\n'))
-      const spaceKey = fields.spaceKey as string
-      const title = fields.title as string
-      const parentId = fields.parentId as string | undefined
-      const status = fields.status as string | undefined
-
-      const contentBody = {
-        ancestors: parentId ? [{id: parentId}] : undefined,
-        body: {
-          storage: {
-            representation: 'atlas_doc_format',
-            value: JSON.stringify(bodyContent),
-          },
-        },
-        space: {key: spaceKey},
-        status,
-        title,
-        type: 'page',
-      }
-
-      const response = await client.content.createContent(contentBody)
-
-      return {
-        data: response,
-        success: true,
-      }
+      const {contentPayload} = this.buildPageBody(fields)
+      const response = await client.content.createContent(contentPayload)
+      return {data: response, success: true}
     } catch (error: unknown) {
       const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
-      return {
-        error: errorMessage,
-        success: false,
+      return {error: errorMessage, success: false}
+    }
+  }
+
+  /**
+   * Create a new page with inline media attachments.
+   * Creates the page first to obtain a page ID, then uploads attachments and
+   * patches the ADF body to embed them by file ID before updating the page.
+   */
+  async createPageWithMedia(fields: Record<string, unknown>, filePaths: string[]): Promise<ApiResult> {
+    try {
+      const client = this.getClient()
+      const {bodyContent, contentPayload} = this.buildPageBody(fields)
+      const {title} = contentPayload
+
+      const externalMediaByBasename = new Map<string, Array<Record<string, unknown>>>()
+      this.collectExternalMedia(
+        bodyContent.content as unknown as Array<Record<string, unknown>>,
+        externalMediaByBasename,
+      )
+
+      const inlinePaths: string[] = []
+      const trailingPaths: string[] = []
+      for (const f of filePaths) {
+        if (externalMediaByBasename.has(path.basename(f))) {
+          inlinePaths.push(f)
+        } else {
+          trailingPaths.push(f)
+        }
       }
+
+      // Create the page first to get a page ID for attachment uploads.
+      const page = await client.content.createContent(contentPayload)
+      const pageId = (page as {id?: string}).id
+      if (!pageId) {
+        return {error: 'Failed to get page ID from creation response', success: false}
+      }
+
+      const uploadResults = await Promise.all(filePaths.map((filePath) => this.addAttachment(pageId, filePath)))
+      const firstFailure = uploadResults.find((r) => !r.success)
+      if (firstFailure) return firstFailure
+
+      type UploadData = {results?: Array<{extensions?: {collectionName?: string; fileId?: string}}>}
+      const fileInfoByPath = new Map<string, {collection: string; id: string}>()
+      for (const [i, filePath] of filePaths.entries()) {
+        const uploadData = uploadResults[i].data as UploadData
+        const att = uploadData?.results?.[0]
+        const fileId = att?.extensions?.fileId
+        const collectionName = att?.extensions?.collectionName ?? ''
+        if (fileId) {
+          fileInfoByPath.set(filePath, {collection: collectionName, id: fileId})
+        }
+      }
+
+      this.patchMediaNodes(
+        bodyContent.content as unknown as Array<Record<string, unknown>>,
+        inlinePaths,
+        trailingPaths,
+        fileInfoByPath,
+        externalMediaByBasename,
+      )
+
+      const updatedPage = await client.content.updateContent({
+        body: {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent)}},
+        id: pageId,
+        title,
+        type: 'page',
+        version: {number: 2},
+      })
+
+      return {data: updatedPage, success: true}
+    } catch (error: unknown) {
+      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      return {error: errorMessage, success: false}
     }
   }
 
@@ -499,6 +543,77 @@ export class ConniApi {
         error: errorMessage,
         success: false,
       }
+    }
+  }
+
+  private buildPageBody(fields: Record<string, unknown>) {
+    // eslint-disable-next-line unicorn/prefer-string-replace-all
+    const bodyContent = markdownToAdf((fields.body as string).replace(/\\n/g, '\n'))
+    const spaceKey = fields.spaceKey as string
+    const title = fields.title as string
+    const parentId = fields.parentId as string | undefined
+    const status = fields.status as string | undefined
+    return {
+      bodyContent,
+      contentPayload: {
+        ancestors: parentId ? [{id: parentId}] : undefined,
+        body: {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent)}},
+        space: {key: spaceKey},
+        status,
+        title,
+        type: 'page',
+      },
+    }
+  }
+
+  private collectExternalMedia(
+    nodes: Array<Record<string, unknown>>,
+    map: Map<string, Array<Record<string, unknown>>>,
+  ): void {
+    for (const node of nodes) {
+      const content = node.content as Array<Record<string, unknown>> | undefined
+      const media = node.type === 'mediaSingle' ? content?.[0] : undefined
+      const attrs = media?.type === 'media' ? (media.attrs as Record<string, unknown> | undefined) : undefined
+
+      if (attrs?.type === 'external' && typeof attrs.url === 'string') {
+        const base = path.basename(attrs.url)
+        if (!map.has(base)) map.set(base, [])
+        map.get(base)!.push(attrs)
+        continue
+      }
+
+      if (content) this.collectExternalMedia(content, map)
+    }
+  }
+
+  /* eslint-disable max-params */
+  private patchMediaNodes(
+    bodyNodes: Array<Record<string, unknown>>,
+    inlinePaths: string[],
+    trailingPaths: string[],
+    fileInfoByPath: Map<string, {collection: string; id: string}>,
+    externalMediaByBasename: Map<string, Array<Record<string, unknown>>>,
+  ): void {
+    for (const filePath of inlinePaths) {
+      const info = fileInfoByPath.get(filePath)
+      if (!info) continue
+      for (const attrs of externalMediaByBasename.get(path.basename(filePath)) ?? []) {
+        delete attrs.url
+        delete attrs.alt
+        attrs.collection = info.collection
+        attrs.id = info.id
+        attrs.type = 'file'
+      }
+    }
+
+    for (const filePath of trailingPaths) {
+      const info = fileInfoByPath.get(filePath)
+      if (!info) continue
+      bodyNodes.push({
+        attrs: {layout: 'center'},
+        content: [{attrs: {collection: info.collection, id: info.id, type: 'file'}, type: 'media'}],
+        type: 'mediaSingle',
+      })
     }
   }
 }
