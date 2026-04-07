@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/hesedcasa/conni/compare/v0.3.1...v0.4.0) (2026-04-07)
+
+
+### 🎉 Features
+
+* add --attach flag for inline media upload on page create ([#27](https://github.com/hesedcasa/conni/issues/27)) ([ec3e3b3](https://github.com/hesedcasa/conni/commit/ec3e3b31ffaeb30ce07b8203de4dba38e049502c))
+
 ## [0.3.1](https://github.com/hesedcasa/conni/compare/v0.3.0...v0.3.1) (2026-04-07)
 
 
