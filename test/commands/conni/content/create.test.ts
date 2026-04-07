@@ -9,6 +9,7 @@ describe('content:create', () => {
   let ContentCreate: any
   let mockReadConfig: any
   let mockCreatePage: any
+  let mockCreatePageWithMedia: any
   let mockClearClients: any
   let jsonOutput: any
   let logOutput: string[]
@@ -36,6 +37,15 @@ describe('content:create', () => {
       success: true,
     })
 
+    mockCreatePageWithMedia = async (_config: any, _fields: any, _filePaths: any) => ({
+      data: {
+        id: '123456',
+        title: 'New Page',
+        type: 'page',
+      },
+      success: true,
+    })
+
     mockClearClients = () => {}
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
@@ -43,6 +53,7 @@ describe('content:create', () => {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
       },
     })
   })
@@ -77,6 +88,7 @@ describe('content:create', () => {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
       },
     })
 
@@ -178,6 +190,7 @@ describe('content:create', () => {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
       },
     })
 
@@ -204,6 +217,7 @@ describe('content:create', () => {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
       },
     })
 
@@ -236,6 +250,7 @@ describe('content:create', () => {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
       },
     })
 
@@ -249,5 +264,125 @@ describe('content:create', () => {
     await command.run()
 
     expect(clearClientsCalled).to.be.true
+  })
+
+  it('calls createPageWithMedia when --attach flag is provided', async () => {
+    let createPageWithMediaCalled = false
+    let receivedFilePaths: any = null
+
+    mockCreatePageWithMedia = async (_config: any, _fields: any, filePaths: any) => {
+      createPageWithMediaCalled = true
+      receivedFilePaths = filePaths
+      return {data: {id: '123456', title: 'New Page', type: 'page'}, success: true}
+    }
+
+    ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
+      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
+      },
+    })
+
+    const command = new ContentCreate.default(
+      [
+        '--fields',
+        'spaceKey=DEV',
+        '--fields',
+        'title=New Page',
+        '--fields',
+        'body=![img](./image.png)',
+        '--attach',
+        './image.png',
+      ],
+      createMockConfig(),
+    )
+
+    command.logJson = (output: any) => {
+      jsonOutput = output
+    }
+
+    await command.run()
+
+    expect(createPageWithMediaCalled).to.be.true
+    expect(receivedFilePaths).to.deep.equal(['./image.png'])
+    expect(jsonOutput.success).to.be.true
+  })
+
+  it('calls createPage (not createPageWithMedia) when no --attach flag', async () => {
+    let createPageCalled = false
+    let createPageWithMediaCalled = false
+
+    mockCreatePage = async () => {
+      createPageCalled = true
+      return {data: {id: '123456', title: 'New Page'}, success: true}
+    }
+
+    mockCreatePageWithMedia = async () => {
+      createPageWithMediaCalled = true
+      return {data: {}, success: true}
+    }
+
+    ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
+      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
+      },
+    })
+
+    const command = new ContentCreate.default(
+      ['--fields', 'spaceKey=DEV', '--fields', 'title=New Page', '--fields', 'body=Content'],
+      createMockConfig(),
+    )
+
+    command.logJson = () => {}
+
+    await command.run()
+
+    expect(createPageCalled).to.be.true
+    expect(createPageWithMediaCalled).to.be.false
+  })
+
+  it('passes multiple attach paths to createPageWithMedia', async () => {
+    let receivedFilePaths: any = null
+
+    mockCreatePageWithMedia = async (_config: any, _fields: any, filePaths: any) => {
+      receivedFilePaths = filePaths
+      return {data: {id: '123456', title: 'New Page'}, success: true}
+    }
+
+    ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
+      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
+      },
+    })
+
+    const command = new ContentCreate.default(
+      [
+        '--fields',
+        'spaceKey=DEV',
+        '--fields',
+        'title=New Page',
+        '--fields',
+        'body=Content',
+        '--attach',
+        './image.png',
+        '--attach',
+        './report.pdf',
+      ],
+      createMockConfig(),
+    )
+
+    command.logJson = () => {}
+
+    await command.run()
+
+    expect(receivedFilePaths).to.deep.equal(['./image.png', './report.pdf'])
   })
 })

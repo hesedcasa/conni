@@ -76,6 +76,21 @@ export async function createPage(config: Config, fields: Record<string, unknown>
 }
 
 /**
+ * Create a new page with inline media attachments
+ * @param config - Confluence configuration
+ * @param fields - Page fields (spaceKey, title, body, parentId)
+ * @param filePaths - Local file paths to upload and embed inline
+ */
+export async function createPageWithMedia(
+  config: Config,
+  fields: Record<string, unknown>,
+  filePaths: string[],
+): Promise<ApiResult> {
+  const conni = await initConni(config)
+  return conni.createPageWithMedia(fields, filePaths)
+}
+
+/**
  * Update an existing page
  * @param config - Confluence configuration
  * @param pageId - Page ID
