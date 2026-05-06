@@ -385,4 +385,104 @@ describe('content:create', () => {
 
     expect(receivedFilePaths).to.deep.equal(['./image.png', './report.pdf'])
   })
+
+  it('passes useStorageFormat=true to createPage when --storage flag is provided', async () => {
+    let receivedUseStorageFormat: any = null
+
+    mockCreatePage = async (_config: any, _fields: any, useStorageFormat: any) => {
+      receivedUseStorageFormat = useStorageFormat
+      return {data: {id: '123456', title: 'New Page'}, success: true}
+    }
+
+    ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
+      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
+      },
+    })
+
+    const storageBody =
+      '<ac:structured-macro ac:name="info"><ac:rich-text-body><p>Note</p></ac:rich-text-body></ac:structured-macro>'
+
+    const command = new ContentCreate.default(
+      ['--fields', 'spaceKey=DEV', '--fields', 'title=New Page', `--fields`, `body=${storageBody}`, '--storage'],
+      createMockConfig(),
+    )
+
+    command.logJson = () => {}
+
+    await command.run()
+
+    expect(receivedUseStorageFormat).to.be.true
+  })
+
+  it('passes useStorageFormat=false to createPage when --storage flag is not provided', async () => {
+    let receivedUseStorageFormat: any = null
+
+    mockCreatePage = async (_config: any, _fields: any, useStorageFormat: any) => {
+      receivedUseStorageFormat = useStorageFormat
+      return {data: {id: '123456', title: 'New Page'}, success: true}
+    }
+
+    ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
+      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
+      },
+    })
+
+    const command = new ContentCreate.default(
+      ['--fields', 'spaceKey=DEV', '--fields', 'title=New Page', '--fields', 'body=Content'],
+      createMockConfig(),
+    )
+
+    command.logJson = () => {}
+
+    await command.run()
+
+    expect(receivedUseStorageFormat).to.be.false
+  })
+
+  it('errors when both --storage and --attach are provided', async () => {
+    ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
+      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        createPage: mockCreatePage,
+        createPageWithMedia: mockCreatePageWithMedia,
+      },
+    })
+
+    const command = new ContentCreate.default(
+      [
+        '--fields',
+        'spaceKey=DEV',
+        '--fields',
+        'title=New Page',
+        '--fields',
+        'body=Content',
+        '--storage',
+        '--attach',
+        './image.png',
+      ],
+      createMockConfig(),
+    )
+
+    command.error = (message: string) => {
+      errorOutput = message
+      throw new Error(message)
+    }
+
+    try {
+      await command.run()
+    } catch {
+      // Expected to throw
+    }
+
+    expect(errorOutput).to.include('--storage and --attach cannot be used together')
+  })
 })
