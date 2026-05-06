@@ -69,10 +69,15 @@ export async function getContent(config: Config, pageId: string): Promise<ApiRes
  * Create a new page
  * @param config - Confluence configuration
  * @param fields - Page fields (spaceKey, title, body, parentId)
+ * @param useStorageFormat - Treat body as Confluence Storage Format (XHTML) instead of Markdown
  */
-export async function createPage(config: Config, fields: Record<string, unknown>): Promise<ApiResult> {
+export async function createPage(
+  config: Config,
+  fields: Record<string, unknown>,
+  useStorageFormat = false,
+): Promise<ApiResult> {
   const conni = await initConni(config)
-  return conni.createPage(fields)
+  return conni.createPage(fields, useStorageFormat)
 }
 
 /**

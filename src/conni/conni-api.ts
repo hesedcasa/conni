@@ -129,10 +129,10 @@ export class ConniApi {
   /**
    * Create a new page
    */
-  async createPage(fields: Record<string, unknown>): Promise<ApiResult> {
+  async createPage(fields: Record<string, unknown>, useStorageFormat = false): Promise<ApiResult> {
     try {
       const client = this.getClient()
-      const {contentPayload} = this.buildPageBody(fields)
+      const {contentPayload} = this.buildPageBody(fields, useStorageFormat)
       const response = await client.content.createContent(contentPayload)
       return {data: response, success: true}
     } catch (error: unknown) {
@@ -154,7 +154,7 @@ export class ConniApi {
 
       const externalMediaByBasename = new Map<string, Array<Record<string, unknown>>>()
       this.collectExternalMedia(
-        bodyContent.content as unknown as Array<Record<string, unknown>>,
+        bodyContent!.content as unknown as Array<Record<string, unknown>>,
         externalMediaByBasename,
       )
 
@@ -192,7 +192,7 @@ export class ConniApi {
       }
 
       this.patchMediaNodes(
-        bodyContent.content as unknown as Array<Record<string, unknown>>,
+        bodyContent!.content as unknown as Array<Record<string, unknown>>,
         inlinePaths,
         trailingPaths,
         fileInfoByPath,
@@ -200,7 +200,7 @@ export class ConniApi {
       )
 
       const updatedPage = await client.content.updateContent({
-        body: {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent)}},
+        body: {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent!)}},
         id: pageId,
         title,
         type: 'page',
@@ -546,18 +546,22 @@ export class ConniApi {
     }
   }
 
-  private buildPageBody(fields: Record<string, unknown>) {
+  private buildPageBody(fields: Record<string, unknown>, useStorageFormat = false) {
     // eslint-disable-next-line unicorn/prefer-string-replace-all
-    const bodyContent = markdownToAdf((fields.body as string).replace(/\\n/g, '\n'))
+    const rawBody = (fields.body as string).replace(/\\n/g, '\n')
+    const bodyContent = useStorageFormat ? null : markdownToAdf(rawBody)
     const spaceKey = fields.spaceKey as string
     const title = fields.title as string
     const parentId = fields.parentId as string | undefined
     const status = fields.status as string | undefined
+    const bodyStorage = useStorageFormat
+      ? {storage: {representation: 'storage', value: rawBody}}
+      : {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent)}}
     return {
       bodyContent,
       contentPayload: {
         ancestors: parentId ? [{id: parentId}] : undefined,
-        body: {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent)}},
+        body: bodyStorage,
         space: {key: spaceKey},
         status,
         title,

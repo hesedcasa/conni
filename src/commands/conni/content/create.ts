@@ -13,6 +13,8 @@ export default class ContentCreate extends Command {
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Child page" body="Content" parentId="123456"',
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Page with image" body="See the diagram:\n![diagram](./diagram.png)" --attach ./diagram.png',
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Page with files" body="Content" --attach ./image.png --attach ./report.pdf',
+    String.raw`<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Page with macro" body="<ac:structured-macro ac:name=\"info\"><ac:rich-text-body><p>Note</p></ac:rich-text-body></ac:structured-macro>" --storage`,
+    '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Storage page" body="$(cat page.html)" --storage',
   ]
   static override flags = {
     attach: Flags.string({
@@ -26,6 +28,10 @@ export default class ContentCreate extends Command {
       required: true,
       summary: 'Content fields in key=value format',
     }),
+    storage: Flags.boolean({
+      description: 'Treat body as Confluence Storage Format (XHTML) to support macros, panels, layouts, and other Confluence-specific elements',
+      required: false,
+    }),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
 
@@ -34,6 +40,10 @@ export default class ContentCreate extends Command {
     const config = await readConfig(this.config.configDir, this.log.bind(this))
     if (!config) {
       return
+    }
+
+    if (flags.storage && flags.attach) {
+      this.error('--storage and --attach cannot be used together')
     }
 
     const fields: Record<string, string> = {}
@@ -54,7 +64,7 @@ export default class ContentCreate extends Command {
 
     const result = flags.attach
       ? await createPageWithMedia(config.auth, fields, flags.attach)
-      : await createPage(config.auth, fields)
+      : await createPage(config.auth, fields, flags.storage ?? false)
     clearClients()
 
     if (flags.toon) {
