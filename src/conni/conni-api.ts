@@ -16,7 +16,7 @@ export interface ApiResult {
 
 export interface Config {
   apiToken: string
-  email: string
+  email?: string
   host: string
 }
 
@@ -327,7 +327,7 @@ export class ConniApi {
       authentication: {
         basic: {
           apiToken: this.config.apiToken,
-          email: this.config.email,
+          email: this.config.email ?? '',
         },
       },
       host: this.config.host,

@@ -32,12 +32,13 @@ export default class ContentCreate extends Command {
       description: 'Set page appearance to full-width',
       required: false,
     }),
+    profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
 
   public async run(): Promise<void> {
     const {flags} = await this.parse(ContentCreate)
-    const config = await readConfig(this.config.configDir, this.log.bind(this))
+    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
     if (!config) {
       return
     }
