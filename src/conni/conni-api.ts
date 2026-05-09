@@ -1,6 +1,8 @@
 import {ConfluenceClient} from 'confluence.js'
 import fs from 'fs-extra'
 import {markdownToAdf} from 'marklassian'
+
+type AdfDocument = ReturnType<typeof markdownToAdf>
 import path from 'node:path'
 
 /**
@@ -134,6 +136,11 @@ export class ConniApi {
       const client = this.getClient()
       const {contentPayload} = this.buildPageBody(fields)
       const response = await client.content.createContent(contentPayload)
+
+      if (fields.fullWidth && response.id) {
+        await this.setPageAppearance(response.id, 'full-width')
+      }
+
       return {data: response, success: true}
     } catch (error: unknown) {
       const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
@@ -430,6 +437,29 @@ export class ConniApi {
   }
 
   /**
+   * Set page appearance (full-width or fixed-width)
+   */
+  async setPageAppearance(pageId: string, appearance: string): Promise<ApiResult> {
+    try {
+      const client = this.getClient()
+      await Promise.all(
+        ['content-appearance-published', 'content-appearance-draft'].map((key) =>
+          client.contentProperties.createContentProperty({
+            id: pageId,
+            key,
+            value: appearance as unknown as Record<string, string>,
+          }),
+        ),
+      )
+
+      return {success: true}
+    } catch (error: unknown) {
+      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      return {error: errorMessage, success: false}
+    }
+  }
+
+  /**
    * Test Confluence API connection
    */
   async testConnection(): Promise<ApiResult> {
@@ -547,8 +577,11 @@ export class ConniApi {
   }
 
   private buildPageBody(fields: Record<string, unknown>) {
+    const representation = (fields.representation as string | undefined) ?? 'atlas_doc_format'
+    const isStorage = representation === 'storage'
     // eslint-disable-next-line unicorn/prefer-string-replace-all
-    const bodyContent = markdownToAdf((fields.body as string).replace(/\\n/g, '\n'))
+    const rawBody = (fields.body as string).replace(/\\n/g, '\n')
+    const bodyContent = isStorage ? (rawBody as unknown as AdfDocument) : markdownToAdf(rawBody)
     const spaceKey = fields.spaceKey as string
     const title = fields.title as string
     const parentId = fields.parentId as string | undefined
@@ -557,7 +590,7 @@ export class ConniApi {
       bodyContent,
       contentPayload: {
         ancestors: parentId ? [{id: parentId}] : undefined,
-        body: {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent)}},
+        body: {storage: {representation, value: isStorage ? rawBody : JSON.stringify(bodyContent)}},
         space: {key: spaceKey},
         status,
         title,
