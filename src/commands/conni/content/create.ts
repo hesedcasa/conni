@@ -1,4 +1,5 @@
 import {Command, Flags} from '@oclif/core'
+import fs from 'fs-extra'
 
 import {readConfig} from '../../../config.js'
 import {clearClients, createPage, createPageWithMedia} from '../../../conni/conni-client.js'
@@ -13,6 +14,7 @@ export default class ContentCreate extends Command {
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Child page" body="Content" parentId="123456"',
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Page with image" body="See the diagram:\n![diagram](./diagram.png)" --attach ./diagram.png',
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Page with files" body="Content" --attach ./image.png --attach ./report.pdf',
+    '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Storage page" body=@storage.xml representation=storage --full-width',
   ]
   static override flags = {
     attach: Flags.string({
@@ -21,10 +23,14 @@ export default class ContentCreate extends Command {
       required: false,
     }),
     fields: Flags.string({
-      description: 'Minimum fields required: spaceKey, title & body',
+      description: 'Content fields in key=value format. Use @file to read value from a file (e.g. body=@content.xml)',
       multiple: true,
       required: true,
-      summary: 'Content fields in key=value format',
+      summary: 'Minimum fields required: spaceKey, title & body',
+    }),
+    'full-width': Flags.boolean({
+      description: 'Set page appearance to full-width',
+      required: false,
     }),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
@@ -40,7 +46,13 @@ export default class ContentCreate extends Command {
     if (flags.fields) {
       for (const field of flags.fields) {
         const [key, ...valueParts] = field.split('=')
-        const value = valueParts.join('=')
+        let value = valueParts.join('=')
+        // Support @file syntax to read value from a file
+        if (value.startsWith('@')) {
+          const filePath = value.slice(1)
+          value = fs.readFileSync(filePath, 'utf8')
+        }
+
         fields[key] = value
       }
     }
@@ -50,6 +62,10 @@ export default class ContentCreate extends Command {
       if (!fields[required]) {
         this.error(`Required field "${required}" is missing`)
       }
+    }
+
+    if (flags['full-width']) {
+      fields.fullWidth = 'true'
     }
 
     const result = flags.attach
