@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/hesedcasa/conni/compare/v0.4.0...v0.5.0) (2026-05-09)
+
+
+### 🎉 Features
+
+* add full-width, storage representation, and [@file](https://github.com/file) syntax to content create ([#45](https://github.com/hesedcasa/conni/issues/45)) ([585cd29](https://github.com/hesedcasa/conni/commit/585cd2983aa508ea3e30bbdf7ed58a42e30777e6))
+
 ## [0.4.0](https://github.com/hesedcasa/conni/compare/v0.3.1...v0.4.0) (2026-04-07)
 
 
