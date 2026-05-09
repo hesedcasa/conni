@@ -26,7 +26,7 @@ $ npm install -g @hesed/conni
 $ conni COMMAND
 running command...
 $ conni (--version)
-@hesed/conni/0.5.0 linux-x64 node-v20.20.2
+@hesed/conni/0.6.0 linux-x64 node-v20.20.2
 $ conni --help [COMMAND]
 USAGE
   $ conni COMMAND
@@ -38,6 +38,8 @@ USAGE
 
 <!-- commands -->
 * [`conni conni auth add`](#conni-conni-auth-add)
+* [`conni conni auth list`](#conni-conni-auth-list)
+* [`conni conni auth profile`](#conni-conni-auth-profile)
 * [`conni conni auth test`](#conni-conni-auth-test)
 * [`conni conni auth update`](#conni-conni-auth-update)
 * [`conni conni content attachment PAGEID FILE`](#conni-conni-content-attachment-pageid-file)
@@ -59,12 +61,13 @@ Add Atlassian authentication
 
 ```
 USAGE
-  $ conni conni auth add -e <value> -t <value> -u <value> [--json]
+  $ conni conni auth add -e <value> -t <value> -u <value> [--json] [-p <value>]
 
 FLAGS
-  -e, --email=<value>  (required) Account email:
-  -t, --token=<value>  (required) API Token:
-  -u, --url=<value>    (required) Atlassian URL (start with https://):
+  -e, --email=<value>    (required) Account email:
+  -p, --profile=<value>  Profile name:
+  -t, --token=<value>    (required) API Token:
+  -u, --url=<value>      (required) Atlassian URL (start with https://):
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -74,9 +77,56 @@ DESCRIPTION
 
 EXAMPLES
   $ conni conni auth add
+
+  $ conni conni auth add --profile work
 ```
 
-_See code: [src/commands/conni/auth/add.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/auth/add.ts)_
+_See code: [src/commands/conni/auth/add.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/auth/add.ts)_
+
+## `conni conni auth list`
+
+List authentication profiles
+
+```
+USAGE
+  $ conni conni auth list [--json]
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  List authentication profiles
+
+EXAMPLES
+  $ conni conni auth list
+```
+
+_See code: [src/commands/conni/auth/list.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/auth/list.ts)_
+
+## `conni conni auth profile`
+
+Set or show the default authentication profile
+
+```
+USAGE
+  $ conni conni auth profile [--json] [--default <value>]
+
+FLAGS
+  --default=<value>  Profile name to set as default
+
+GLOBAL FLAGS
+  --json  Format output as json.
+
+DESCRIPTION
+  Set or show the default authentication profile
+
+EXAMPLES
+  $ conni conni auth profile
+
+  $ conni conni auth profile --default work
+```
+
+_See code: [src/commands/conni/auth/profile.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/auth/profile.ts)_
 
 ## `conni conni auth test`
 
@@ -84,7 +134,10 @@ Test authentication and connection
 
 ```
 USAGE
-  $ conni conni auth test [--json]
+  $ conni conni auth test [--json] [-p <value>]
+
+FLAGS
+  -p, --profile=<value>  Authentication profile name
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -94,34 +147,39 @@ DESCRIPTION
 
 EXAMPLES
   $ conni conni auth test
+
+  $ conni conni auth test --profile work
 ```
 
-_See code: [src/commands/conni/auth/test.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/auth/test.ts)_
+_See code: [src/commands/conni/auth/test.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/auth/test.ts)_
 
 ## `conni conni auth update`
 
-Update existing authentication
+Update existing authentication profile
 
 ```
 USAGE
-  $ conni conni auth update -e <value> -t <value> -u <value> [--json]
+  $ conni conni auth update -e <value> -t <value> -u <value> [--json] [-p <value>]
 
 FLAGS
-  -e, --email=<value>  (required) Account email
-  -t, --token=<value>  (required) API Token
-  -u, --url=<value>    (required) Atlassian instance URL (start with https://)
+  -e, --email=<value>    (required) Account email
+  -p, --profile=<value>  Profile name to update (default: "default")
+  -t, --token=<value>    (required) API Token
+  -u, --url=<value>      (required) Atlassian instance URL (start with https://)
 
 GLOBAL FLAGS
   --json  Format output as json.
 
 DESCRIPTION
-  Update existing authentication
+  Update existing authentication profile
 
 EXAMPLES
   $ conni conni auth update
+
+  $ conni conni auth update --profile work
 ```
 
-_See code: [src/commands/conni/auth/update.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/auth/update.ts)_
+_See code: [src/commands/conni/auth/update.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/auth/update.ts)_
 
 ## `conni conni content attachment PAGEID FILE`
 
@@ -129,14 +187,15 @@ Add attachment to Confluence content
 
 ```
 USAGE
-  $ conni conni content attachment PAGEID FILE [--toon]
+  $ conni conni content attachment PAGEID FILE [-p <value>] [--toon]
 
 ARGUMENTS
   PAGEID  Page ID
   FILE    Path to the file to upload
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   Add attachment to Confluence content
@@ -145,7 +204,7 @@ EXAMPLES
   $ conni conni content attachment 123456 ./document.pdf
 ```
 
-_See code: [src/commands/conni/content/attachment.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/attachment.ts)_
+_See code: [src/commands/conni/content/attachment.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/attachment.ts)_
 
 ## `conni conni content attachment-download ATTACHMENTID [OUTPUTPATH]`
 
@@ -153,14 +212,15 @@ Download attachment from Confluence content
 
 ```
 USAGE
-  $ conni conni content attachment-download ATTACHMENTID [OUTPUTPATH] [--toon]
+  $ conni conni content attachment-download ATTACHMENTID [OUTPUTPATH] [-p <value>] [--toon]
 
 ARGUMENTS
   ATTACHMENTID  Attachment ID
   [OUTPUTPATH]  Output file path
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   Download attachment from Confluence content
@@ -171,7 +231,7 @@ EXAMPLES
   $ conni conni content attachment-download att12345 ./document.pdf
 ```
 
-_See code: [src/commands/conni/content/attachment-download.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/attachment-download.ts)_
+_See code: [src/commands/conni/content/attachment-download.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/attachment-download.ts)_
 
 ## `conni conni content comment PAGEID BODY`
 
@@ -179,14 +239,15 @@ Add comment to Confluence content
 
 ```
 USAGE
-  $ conni conni content comment PAGEID BODY [--toon]
+  $ conni conni content comment PAGEID BODY [-p <value>] [--toon]
 
 ARGUMENTS
   PAGEID  Page ID
   BODY    Comment in Markdown format
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   Add comment to Confluence content
@@ -204,7 +265,7 @@ EXAMPLES
   $ conni conni content comment 123456 "$(cat content.md)"
 ```
 
-_See code: [src/commands/conni/content/comment.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/comment.ts)_
+_See code: [src/commands/conni/content/comment.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/comment.ts)_
 
 ## `conni conni content comment-delete ID`
 
@@ -212,13 +273,14 @@ Delete comment from Confluence content
 
 ```
 USAGE
-  $ conni conni content comment-delete ID [--toon]
+  $ conni conni content comment-delete ID [-p <value>] [--toon]
 
 ARGUMENTS
   ID  Comment ID to delete
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   Delete comment from Confluence content
@@ -227,7 +289,7 @@ EXAMPLES
   $ conni conni content comment-delete 1544224770
 ```
 
-_See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/comment-delete.ts)_
+_See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/comment-delete.ts)_
 
 ## `conni conni content comment-update ID BODY`
 
@@ -235,14 +297,15 @@ Update a comment in Confluence content
 
 ```
 USAGE
-  $ conni conni content comment-update ID BODY [--toon]
+  $ conni conni content comment-update ID BODY [-p <value>] [--toon]
 
 ARGUMENTS
   ID    Comment ID to update
   BODY  Comment in Markdown format
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   Update a comment in Confluence content
@@ -260,7 +323,7 @@ EXAMPLES
   $ conni conni content comment-update 1544224770 "$(cat content.md)"
 ```
 
-_See code: [src/commands/conni/content/comment-update.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/comment-update.ts)_
+_See code: [src/commands/conni/content/comment-update.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/comment-update.ts)_
 
 ## `conni conni content create`
 
@@ -268,13 +331,14 @@ Create a new Confluence page
 
 ```
 USAGE
-  $ conni conni content create --fields <value>... [--attach <value>...] [--full-width] [--toon]
+  $ conni conni content create --fields <value>... [--attach <value>...] [--full-width] [-p <value>] [--toon]
 
 FLAGS
-  --attach=<value>...  Path to a file to upload and embed inline (can be used multiple times)
-  --fields=<value>...  (required) Minimum fields required: spaceKey, title & body
-  --full-width         Set page appearance to full-width
-  --toon               Format output as toon
+  -p, --profile=<value>    Authentication profile name
+      --attach=<value>...  Path to a file to upload and embed inline (can be used multiple times)
+      --fields=<value>...  (required) Minimum fields required: spaceKey, title & body
+      --full-width         Set page appearance to full-width
+      --toon               Format output as toon
 
 DESCRIPTION
   Create a new Confluence page
@@ -306,7 +370,7 @@ FLAG DESCRIPTIONS
     Content fields in key=value format. Use @file to read value from a file (e.g. body=@content.xml)
 ```
 
-_See code: [src/commands/conni/content/create.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/create.ts)_
+_See code: [src/commands/conni/content/create.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/create.ts)_
 
 ## `conni conni content delete PAGEID`
 
@@ -314,13 +378,14 @@ Delete a Confluence page
 
 ```
 USAGE
-  $ conni conni content delete PAGEID [--toon]
+  $ conni conni content delete PAGEID [-p <value>] [--toon]
 
 ARGUMENTS
   PAGEID  Page ID to delete
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   Delete a Confluence page
@@ -329,7 +394,7 @@ EXAMPLES
   $ conni conni content delete 1543634992
 ```
 
-_See code: [src/commands/conni/content/delete.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/delete.ts)_
+_See code: [src/commands/conni/content/delete.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/delete.ts)_
 
 ## `conni conni content get PAGEID`
 
@@ -337,13 +402,14 @@ Get details of a Confluence content
 
 ```
 USAGE
-  $ conni conni content get PAGEID [--toon]
+  $ conni conni content get PAGEID [-p <value>] [--toon]
 
 ARGUMENTS
   PAGEID  Page ID
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   Get details of a Confluence content
@@ -352,7 +418,7 @@ EXAMPLES
   $ conni conni content get 1544060948
 ```
 
-_See code: [src/commands/conni/content/get.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/get.ts)_
+_See code: [src/commands/conni/content/get.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/get.ts)_
 
 ## `conni conni content search CQL`
 
@@ -360,15 +426,16 @@ Search for Confluence contents using CQL
 
 ```
 USAGE
-  $ conni conni content search CQL [--expand <value>] [--limit <value>] [--toon]
+  $ conni conni content search CQL [--expand <value>] [--limit <value>] [-p <value>] [--toon]
 
 ARGUMENTS
   CQL  CQL expression
 
 FLAGS
-  --expand=<value>  Properties of the content to expand
-  --limit=<value>   Maximum number of contents per page
-  --toon            Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --expand=<value>   Properties of the content to expand
+      --limit=<value>    Maximum number of contents per page
+      --toon             Format output as toon
 
 DESCRIPTION
   Search for Confluence contents using CQL
@@ -379,7 +446,7 @@ EXAMPLES
   $ conni conni content search 'created > startOfMonth()' --limit=5 --expand=body,version
 ```
 
-_See code: [src/commands/conni/content/search.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/search.ts)_
+_See code: [src/commands/conni/content/search.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/search.ts)_
 
 ## `conni conni content update PAGEID`
 
@@ -387,13 +454,14 @@ Update an existing Confluence content
 
 ```
 USAGE
-  $ conni conni content update PAGEID --fields <value>...
+  $ conni conni content update PAGEID --fields <value>... [-p <value>]
 
 ARGUMENTS
   PAGEID  Page ID
 
 FLAGS
-  --fields=<value>...  (required) Content fields to update in key=value format
+  -p, --profile=<value>    Authentication profile name
+      --fields=<value>...  (required) Content fields to update in key=value format
 
 DESCRIPTION
   Update an existing Confluence content
@@ -413,7 +481,7 @@ EXAMPLES
   $ conni conni content update 1076199489 --fields body="$(cat content.md)"
 ```
 
-_See code: [src/commands/conni/content/update.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/update.ts)_
+_See code: [src/commands/conni/content/update.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/content/update.ts)_
 
 ## `conni conni space get SPACEKEY`
 
@@ -421,13 +489,14 @@ Get details of a Confluence space
 
 ```
 USAGE
-  $ conni conni space get SPACEKEY [--toon]
+  $ conni conni space get SPACEKEY [-p <value>] [--toon]
 
 ARGUMENTS
   SPACEKEY  Space key
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   Get details of a Confluence space
@@ -436,7 +505,7 @@ EXAMPLES
   $ conni conni space get DEV
 ```
 
-_See code: [src/commands/conni/space/get.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/space/get.ts)_
+_See code: [src/commands/conni/space/get.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/space/get.ts)_
 
 ## `conni conni space list`
 
@@ -444,10 +513,11 @@ List all Confluence spaces
 
 ```
 USAGE
-  $ conni conni space list [--toon]
+  $ conni conni space list [-p <value>] [--toon]
 
 FLAGS
-  --toon  Format output as toon
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
 
 DESCRIPTION
   List all Confluence spaces
@@ -456,5 +526,5 @@ EXAMPLES
   $ conni conni space list
 ```
 
-_See code: [src/commands/conni/space/list.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/space/list.ts)_
+_See code: [src/commands/conni/space/list.ts](https://github.com/hesedcasa/conni/blob/v0.6.0/src/commands/conni/space/list.ts)_
 <!-- commandsstop -->
