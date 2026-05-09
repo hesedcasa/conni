@@ -15,12 +15,13 @@ export default class ContentAttachment extends Command {
   static override description = 'Add attachment to Confluence content'
   static override examples = ['<%= config.bin %> <%= command.id %> 123456 ./document.pdf']
   static override flags = {
+    profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
 
   public async run(): Promise<void> {
     const {args, flags} = await this.parse(ContentAttachment)
-    const config = await readConfig(this.config.configDir, this.log.bind(this))
+    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
     if (!config) {
       return
     }

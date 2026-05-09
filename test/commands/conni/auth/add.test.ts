@@ -58,8 +58,35 @@ describe('auth:add', () => {
   })
 
   it('adds authentication successfully with flags', async () => {
+    mockFs = {
+      ...mockFs,
+      async readJSON() {
+        throw new Error('ENOENT: no such file or directory')
+      },
+    }
+
+    AuthAdd = await esmock('../../../../src/commands/conni/auth/add.js', {
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        testConnection: mockTestConnection,
+      },
+      '@oclif/core/ux': {
+        action: mockAction,
+      },
+      'fs-extra': mockFs,
+    })
+
     const command = new AuthAdd.default(
-      ['--email', 'test@example.com', '--token', 'token123', '--url', 'https://test.atlassian.net'],
+      [
+        '--email',
+        'test@example.com',
+        '--token',
+        'token123',
+        '--url',
+        'https://test.atlassian.net',
+        '--profile',
+        'default',
+      ],
       createMockConfig(),
     )
 
@@ -91,7 +118,16 @@ describe('auth:add', () => {
     })
 
     const command = new AuthAdd.default(
-      ['--email', 'test@example.com', '--token', 'bad-token', '--url', 'https://test.atlassian.net'],
+      [
+        '--email',
+        'test@example.com',
+        '--token',
+        'bad-token',
+        '--url',
+        'https://test.atlassian.net',
+        '--profile',
+        'work',
+      ],
       createMockConfig(),
     )
 
@@ -110,16 +146,13 @@ describe('auth:add', () => {
     expect(errorThrown).to.be.true
   })
 
-  it('creates config file if it does not exist', async () => {
-    let createFileCalled = false
+  it('converts old-format auth to default profile before saving', async () => {
+    let writtenData: any = null
 
     mockFs = {
       ...mockFs,
-      async createFile() {
-        createFileCalled = true
-      },
-      async pathExists() {
-        return false
+      async writeJSON(_path: string, data: any) {
+        writtenData = data
       },
     }
 
@@ -135,7 +168,7 @@ describe('auth:add', () => {
     })
 
     const command = new AuthAdd.default(
-      ['--email', 'test@example.com', '--token', 'token123', '--url', 'https://test.atlassian.net'],
+      ['--email', 'new@example.com', '--token', 'new-token', '--url', 'https://new.atlassian.net', '--profile', 'work'],
       createMockConfig(),
     )
 
@@ -143,19 +176,29 @@ describe('auth:add', () => {
 
     await command.run()
 
-    expect(createFileCalled).to.be.true
+    expect(writtenData.profiles.default).to.deep.equal({
+      apiToken: 'test-token',
+      email: 'test@example.com',
+      host: 'https://test.atlassian.net',
+    })
+    expect(writtenData.profiles.work).to.deep.equal({
+      apiToken: 'new-token',
+      email: 'new@example.com',
+      host: 'https://new.atlassian.net',
+    })
+    expect(writtenData.auth).to.be.undefined
   })
 
-  it('does not create config file if it already exists', async () => {
-    let createFileCalled = false
+  it('creates config file if it does not exist', async () => {
+    let writeJSONCalled = false
 
     mockFs = {
       ...mockFs,
-      async createFile() {
-        createFileCalled = true
+      async readJSON() {
+        throw new Error('ENOENT: no such file or directory')
       },
-      async pathExists() {
-        return true
+      async writeJSON() {
+        writeJSONCalled = true
       },
     }
 
@@ -171,7 +214,16 @@ describe('auth:add', () => {
     })
 
     const command = new AuthAdd.default(
-      ['--email', 'test@example.com', '--token', 'token123', '--url', 'https://test.atlassian.net'],
+      [
+        '--email',
+        'test@example.com',
+        '--token',
+        'token123',
+        '--url',
+        'https://test.atlassian.net',
+        '--profile',
+        'default',
+      ],
       createMockConfig(),
     )
 
@@ -179,7 +231,149 @@ describe('auth:add', () => {
 
     await command.run()
 
-    expect(createFileCalled).to.be.false
+    expect(writeJSONCalled).to.be.true
+  })
+
+  it('merges new profile into existing config', async () => {
+    let writtenData: any = null
+
+    mockFs = {
+      ...mockFs,
+      async readJSON() {
+        return {
+          profiles: {
+            default: {
+              apiToken: 'existing-token',
+              email: 'existing@example.com',
+              host: 'https://existing.atlassian.net',
+            },
+          },
+        }
+      },
+      async writeJSON(_path: string, data: any) {
+        writtenData = data
+      },
+    }
+
+    AuthAdd = await esmock('../../../../src/commands/conni/auth/add.js', {
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        testConnection: mockTestConnection,
+      },
+      '@oclif/core/ux': {
+        action: mockAction,
+      },
+      'fs-extra': mockFs,
+    })
+
+    const command = new AuthAdd.default(
+      ['--email', 'new@example.com', '--token', 'new-token', '--url', 'https://new.atlassian.net', '--profile', 'work'],
+      createMockConfig(),
+    )
+
+    command.log = () => {}
+
+    await command.run()
+
+    expect(writtenData.profiles.default).to.deep.equal({
+      apiToken: 'existing-token',
+      email: 'existing@example.com',
+      host: 'https://existing.atlassian.net',
+    })
+    expect(writtenData.profiles.work).to.deep.equal({
+      apiToken: 'new-token',
+      email: 'new@example.com',
+      host: 'https://new.atlassian.net',
+    })
+  })
+
+  it('errors when adding a profile that already exists', async () => {
+    mockFs = {
+      ...mockFs,
+      async readJSON() {
+        return {
+          profiles: {
+            default: {
+              apiToken: 'existing-token',
+              email: 'existing@example.com',
+              host: 'https://existing.atlassian.net',
+            },
+          },
+        }
+      },
+    }
+
+    AuthAdd = await esmock('../../../../src/commands/conni/auth/add.js', {
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        testConnection: mockTestConnection,
+      },
+      '@oclif/core/ux': {
+        action: mockAction,
+      },
+      'fs-extra': mockFs,
+    })
+
+    const command = new AuthAdd.default(
+      [
+        '--email',
+        'new@example.com',
+        '--token',
+        'new-token',
+        '--url',
+        'https://new.atlassian.net',
+        '--profile',
+        'default',
+      ],
+      createMockConfig(),
+    )
+
+    let errorThrown = false
+    command.error = (msg: string) => {
+      errorThrown = true
+      expect(msg).to.include("Profile 'default' already exists")
+    }
+
+    await command.run()
+
+    expect(errorThrown).to.be.true
+  })
+
+  it('errors when adding default profile to old-format config', async () => {
+    AuthAdd = await esmock('../../../../src/commands/conni/auth/add.js', {
+      '../../../../src/conni/conni-client.js': {
+        clearClients: mockClearClients,
+        testConnection: mockTestConnection,
+      },
+      '@oclif/core/ux': {
+        action: mockAction,
+      },
+      'fs-extra': mockFs,
+    })
+
+    const command = new AuthAdd.default(
+      [
+        '--email',
+        'new@example.com',
+        '--token',
+        'new-token',
+        '--url',
+        'https://new.atlassian.net',
+        '--profile',
+        'default',
+      ],
+      createMockConfig(),
+    )
+
+    let errorThrown = false
+    command.error = (msg: string) => {
+      errorThrown = true
+      expect(msg).to.include("Profile 'default' already exists")
+    }
+
+    await command.run()
+
+    expect(errorThrown).to.be.true
   })
 
   it('calls clearClients after execution', async () => {
@@ -201,7 +395,16 @@ describe('auth:add', () => {
     })
 
     const command = new AuthAdd.default(
-      ['--email', 'test@example.com', '--token', 'token123', '--url', 'https://test.atlassian.net'],
+      [
+        '--email',
+        'test@example.com',
+        '--token',
+        'token123',
+        '--url',
+        'https://test.atlassian.net',
+        '--profile',
+        'work',
+      ],
       createMockConfig(),
     )
 

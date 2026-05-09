@@ -16,12 +16,13 @@ export default class ContentSearch extends Command {
   static override flags = {
     expand: Flags.string({description: 'Properties of the content to expand', required: false}),
     limit: Flags.integer({description: 'Maximum number of contents per page', required: false}),
+    profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
 
   public async run(): Promise<void> {
     const {args, flags} = await this.parse(ContentSearch)
-    const config = await readConfig(this.config.configDir, this.log.bind(this))
+    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
     if (!config) {
       return
     }
