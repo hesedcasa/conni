@@ -26,7 +26,7 @@ $ npm install -g @hesed/conni
 $ conni COMMAND
 running command...
 $ conni (--version)
-@hesed/conni/0.4.0 linux-x64 node-v20.20.2
+@hesed/conni/0.5.0 linux-x64 node-v20.20.2
 $ conni --help [COMMAND]
 USAGE
   $ conni COMMAND
@@ -76,7 +76,7 @@ EXAMPLES
   $ conni conni auth add
 ```
 
-_See code: [src/commands/conni/auth/add.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/auth/add.ts)_
+_See code: [src/commands/conni/auth/add.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/auth/add.ts)_
 
 ## `conni conni auth test`
 
@@ -96,7 +96,7 @@ EXAMPLES
   $ conni conni auth test
 ```
 
-_See code: [src/commands/conni/auth/test.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/auth/test.ts)_
+_See code: [src/commands/conni/auth/test.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/auth/test.ts)_
 
 ## `conni conni auth update`
 
@@ -121,7 +121,7 @@ EXAMPLES
   $ conni conni auth update
 ```
 
-_See code: [src/commands/conni/auth/update.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/auth/update.ts)_
+_See code: [src/commands/conni/auth/update.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/auth/update.ts)_
 
 ## `conni conni content attachment PAGEID FILE`
 
@@ -145,7 +145,7 @@ EXAMPLES
   $ conni conni content attachment 123456 ./document.pdf
 ```
 
-_See code: [src/commands/conni/content/attachment.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/attachment.ts)_
+_See code: [src/commands/conni/content/attachment.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/attachment.ts)_
 
 ## `conni conni content attachment-download ATTACHMENTID [OUTPUTPATH]`
 
@@ -171,7 +171,7 @@ EXAMPLES
   $ conni conni content attachment-download att12345 ./document.pdf
 ```
 
-_See code: [src/commands/conni/content/attachment-download.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/attachment-download.ts)_
+_See code: [src/commands/conni/content/attachment-download.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/attachment-download.ts)_
 
 ## `conni conni content comment PAGEID BODY`
 
@@ -204,7 +204,7 @@ EXAMPLES
   $ conni conni content comment 123456 "$(cat content.md)"
 ```
 
-_See code: [src/commands/conni/content/comment.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/comment.ts)_
+_See code: [src/commands/conni/content/comment.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/comment.ts)_
 
 ## `conni conni content comment-delete ID`
 
@@ -227,7 +227,7 @@ EXAMPLES
   $ conni conni content comment-delete 1544224770
 ```
 
-_See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/comment-delete.ts)_
+_See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/comment-delete.ts)_
 
 ## `conni conni content comment-update ID BODY`
 
@@ -260,7 +260,7 @@ EXAMPLES
   $ conni conni content comment-update 1544224770 "$(cat content.md)"
 ```
 
-_See code: [src/commands/conni/content/comment-update.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/comment-update.ts)_
+_See code: [src/commands/conni/content/comment-update.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/comment-update.ts)_
 
 ## `conni conni content create`
 
@@ -268,11 +268,12 @@ Create a new Confluence page
 
 ```
 USAGE
-  $ conni conni content create --fields <value>... [--attach <value>...] [--toon]
+  $ conni conni content create --fields <value>... [--attach <value>...] [--full-width] [--toon]
 
 FLAGS
   --attach=<value>...  Path to a file to upload and embed inline (can be used multiple times)
-  --fields=<value>...  (required) Content fields in key=value format
+  --fields=<value>...  (required) Minimum fields required: spaceKey, title & body
+  --full-width         Set page appearance to full-width
   --toon               Format output as toon
 
 DESCRIPTION
@@ -297,13 +298,15 @@ EXAMPLES
 
   $ conni conni content create --fields spaceKey="DEV" title="Page with files" body="Content" --attach ./image.png --attach ./report.pdf
 
-FLAG DESCRIPTIONS
-  --fields=<value>...  Content fields in key=value format
+  $ conni conni content create --fields spaceKey="DEV" title="Storage page" body=@storage.xml representation=storage --full-width
 
-    Minimum fields required: spaceKey, title & body
+FLAG DESCRIPTIONS
+  --fields=<value>...  Minimum fields required: spaceKey, title & body
+
+    Content fields in key=value format. Use @file to read value from a file (e.g. body=@content.xml)
 ```
 
-_See code: [src/commands/conni/content/create.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/create.ts)_
+_See code: [src/commands/conni/content/create.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/create.ts)_
 
 ## `conni conni content delete PAGEID`
 
@@ -326,7 +329,7 @@ EXAMPLES
   $ conni conni content delete 1543634992
 ```
 
-_See code: [src/commands/conni/content/delete.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/delete.ts)_
+_See code: [src/commands/conni/content/delete.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/delete.ts)_
 
 ## `conni conni content get PAGEID`
 
@@ -349,7 +352,7 @@ EXAMPLES
   $ conni conni content get 1544060948
 ```
 
-_See code: [src/commands/conni/content/get.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/get.ts)_
+_See code: [src/commands/conni/content/get.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/get.ts)_
 
 ## `conni conni content search CQL`
 
@@ -376,7 +379,7 @@ EXAMPLES
   $ conni conni content search 'created > startOfMonth()' --limit=5 --expand=body,version
 ```
 
-_See code: [src/commands/conni/content/search.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/search.ts)_
+_See code: [src/commands/conni/content/search.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/search.ts)_
 
 ## `conni conni content update PAGEID`
 
@@ -410,7 +413,7 @@ EXAMPLES
   $ conni conni content update 1076199489 --fields body="$(cat content.md)"
 ```
 
-_See code: [src/commands/conni/content/update.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/content/update.ts)_
+_See code: [src/commands/conni/content/update.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/content/update.ts)_
 
 ## `conni conni space get SPACEKEY`
 
@@ -433,7 +436,7 @@ EXAMPLES
   $ conni conni space get DEV
 ```
 
-_See code: [src/commands/conni/space/get.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/space/get.ts)_
+_See code: [src/commands/conni/space/get.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/space/get.ts)_
 
 ## `conni conni space list`
 
@@ -453,5 +456,5 @@ EXAMPLES
   $ conni conni space list
 ```
 
-_See code: [src/commands/conni/space/list.ts](https://github.com/hesedcasa/conni/blob/v0.4.0/src/commands/conni/space/list.ts)_
+_See code: [src/commands/conni/space/list.ts](https://github.com/hesedcasa/conni/blob/v0.5.0/src/commands/conni/space/list.ts)_
 <!-- commandsstop -->
