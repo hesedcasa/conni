@@ -51,6 +51,10 @@ export default class AuthUpdate extends Command {
       string,
       Record<string, string>
     >
+    if (!profiles[profileName]) {
+      this.error(`Profile '${profileName}' does not exist. Use auth:add to create it.`)
+    }
+
     const current = profiles[profileName] ?? {}
 
     const apiToken =
@@ -71,7 +75,12 @@ export default class AuthUpdate extends Command {
       return
     }
 
-    const updatedConfig = {...existing, profiles: {...profiles, [profileName]: {apiToken, ...(email && {email}), host}}}
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const {auth: _, ...rest} = existing
+    const updatedConfig = {
+      ...rest,
+      profiles: {...profiles, [profileName]: {apiToken, ...(email && {email}), host}},
+    }
     await fs.writeJSON(configFilePath, updatedConfig, {mode: 0o600})
 
     action.start('Authenticating')
