@@ -542,6 +542,8 @@ export class ConniApi {
       const currentVersion = ((page as {version?: {number?: number}}).version?.number ?? 0) + 1
       const title = (fields.title as string) ?? (page as {title?: string}).title ?? ''
       const body = fields.body as string | undefined
+      const representation = (fields.representation as string | undefined) ?? 'atlas_doc_format'
+      const isStorage = representation === 'storage'
 
       const response = await client.content.updateContent({
         id: pageId,
@@ -551,9 +553,11 @@ export class ConniApi {
           : {
               body: {
                 storage: {
-                  representation: 'atlas_doc_format',
-                  // eslint-disable-next-line unicorn/prefer-string-replace-all
-                  value: JSON.stringify(markdownToAdf(body.replace(/\\n/g, '\n'))),
+                  representation,
+                  value: isStorage
+                    ? body
+                    : // eslint-disable-next-line unicorn/prefer-string-replace-all
+                      JSON.stringify(markdownToAdf(body.replace(/\\n/g, '\n'))),
                 },
               },
             }),
@@ -562,6 +566,10 @@ export class ConniApi {
           number: currentVersion,
         },
       })
+
+      if (fields.fullWidth) {
+        await this.setPageAppearance(pageId, 'full-width')
+      }
 
       return {
         data: response,
