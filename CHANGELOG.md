@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/hesedcasa/conni/compare/v0.6.1...v0.7.0) (2026-05-10)
+
+
+### 🎉 Features
+
+* support OAuth2 access token authentication ([#51](https://github.com/hesedcasa/conni/issues/51)) ([2441f67](https://github.com/hesedcasa/conni/commit/2441f6795fb418df48928be6ce2a23794b34857c))
+
 ## [0.6.1](https://github.com/hesedcasa/conni/compare/v0.6.0...v0.6.1) (2026-05-10)
 
 
