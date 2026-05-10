@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/hesedcasa/conni/compare/v0.6.0...v0.6.1) (2026-05-10)
+
+
+### 🛠️ Fixes
+
+* apply --full-width flag in content update command ([#49](https://github.com/hesedcasa/conni/issues/49)) ([55c50e1](https://github.com/hesedcasa/conni/commit/55c50e1b1826eb9661203af2f6523c0dc2767ac4))
+
 ## [0.6.0](https://github.com/hesedcasa/conni/compare/v0.5.0...v0.6.0) (2026-05-09)
 
 
