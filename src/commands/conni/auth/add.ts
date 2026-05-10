@@ -16,7 +16,7 @@ export default class AuthAdd extends Command {
     '<%= config.bin %> <%= command.id %> --profile work',
   ]
   static override flags = {
-    email: Flags.string({char: 'e', description: 'Account email:', required: !process.stdout.isTTY}),
+    email: Flags.string({char: 'e', description: 'Account email:', required: false}),
     profile: Flags.string({char: 'p', description: 'Profile name:', required: false}),
     token: Flags.string({char: 't', description: 'API Token:', required: !process.stdout.isTTY}),
     url: Flags.string({
@@ -31,7 +31,7 @@ export default class AuthAdd extends Command {
     const profileName =
       flags.profile ?? (process.stdout.isTTY ? await input({message: 'Profile name:', required: true}) : 'default')
     const apiToken = flags.token ?? (await input({message: 'API Token:', required: true}))
-    const email = flags.email ?? (await input({message: 'Account email:', required: true}))
+    const email = flags.email ?? (await input({message: 'Account email:', required: false}))
     const host = flags.url ?? (await input({message: 'Atlassian instance URL (start with https://):', required: true}))
     const configFilePath = path.join(this.config.configDir, 'conni-config.json')
 
@@ -48,13 +48,13 @@ export default class AuthAdd extends Command {
       this.error(`Profile '${profileName}' already exists. Use 'conni auth update' to modify it.`)
     }
 
-    profiles[profileName] = {apiToken, email, host}
+    profiles[profileName] = {apiToken, ...(email && {email}), host}
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const {auth: _auth, ...rest} = existing
     await fs.writeJSON(configFilePath, {...rest, profiles}, {mode: 0o600})
 
     action.start('Authenticating')
-    const result = await testConnection({apiToken, email, host})
+    const result = await testConnection({apiToken, ...(email && {email}), host})
     clearClients()
 
     if (result.success) {
