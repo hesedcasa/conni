@@ -16,7 +16,7 @@ export default class AuthUpdate extends Command {
     '<%= config.bin %> <%= command.id %> --profile work',
   ]
   static override flags = {
-    email: Flags.string({char: 'e', description: 'Account email', required: !process.stdout.isTTY}),
+    email: Flags.string({char: 'e', description: 'Account email', required: false}),
     profile: Flags.string({char: 'p', description: 'Profile name to update (default: "default")', required: false}),
     token: Flags.string({char: 't', description: 'API Token', required: !process.stdout.isTTY}),
     url: Flags.string({
@@ -56,7 +56,7 @@ export default class AuthUpdate extends Command {
     const apiToken =
       flags.token ?? (await input({default: current.apiToken, message: 'API Token:', prefill: 'tab', required: true}))
     const email =
-      flags.email ?? (await input({default: current.email, message: 'Account email:', prefill: 'tab', required: true}))
+      flags.email ?? (await input({default: current.email, message: 'Account email:', prefill: 'tab', required: false}))
     const host =
       flags.url ??
       (await input({
@@ -71,11 +71,11 @@ export default class AuthUpdate extends Command {
       return
     }
 
-    const updatedConfig = {...existing, profiles: {...profiles, [profileName]: {apiToken, email, host}}}
+    const updatedConfig = {...existing, profiles: {...profiles, [profileName]: {apiToken, ...(email && {email}), host}}}
     await fs.writeJSON(configFilePath, updatedConfig, {mode: 0o600})
 
     action.start('Authenticating')
-    const result = await testConnection({apiToken, email, host})
+    const result = await testConnection({apiToken, ...(email && {email}), host})
     clearClients()
 
     if (result.success) {

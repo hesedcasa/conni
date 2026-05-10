@@ -324,12 +324,18 @@ export class ConniApi {
     }
 
     this.client = new ConfluenceClient({
-      authentication: {
-        basic: {
-          apiToken: this.config.apiToken,
-          email: this.config.email ?? '',
-        },
-      },
+      authentication: this.config.email
+        ? {
+            basic: {
+              apiToken: this.config.apiToken,
+              email: this.config.email,
+            },
+          }
+        : {
+            oauth2: {
+              accessToken: this.config.apiToken,
+            },
+          },
       host: this.config.host,
     })
 
