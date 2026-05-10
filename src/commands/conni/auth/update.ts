@@ -52,7 +52,7 @@ export default class AuthUpdate extends Command {
       Record<string, string>
     >
     if (!profiles[profileName]) {
-      this.error(`Profile '${profileName}' does not exist. Use auth:add to create it.`)
+      this.error(`Profile '${profileName}' does not exist. Use 'conni auth add' to create it.`)
     }
 
     const current = profiles[profileName] ?? {}

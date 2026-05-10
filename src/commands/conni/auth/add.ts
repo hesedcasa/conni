@@ -21,7 +21,7 @@ export default class AuthAdd extends Command {
     token: Flags.string({char: 't', description: 'API Token', required: !process.stdout.isTTY}),
     url: Flags.string({
       char: 'u',
-      description: 'Atlassian URL (start with https://):',
+      description: 'Atlassian URL (start with https://)',
       required: !process.stdout.isTTY,
     }),
   }
