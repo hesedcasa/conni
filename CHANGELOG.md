@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/hesedcasa/conni/compare/v0.7.0...v0.7.1) (2026-05-10)
+
+
+### 🛠️ Fixes
+
+* improve auth commands validation and config handling ([#53](https://github.com/hesedcasa/conni/issues/53)) ([17a2e70](https://github.com/hesedcasa/conni/commit/17a2e7059d31fc83a07f9a3074d939f62386f0ef))
+* improve auth commands validation and config handling ([#55](https://github.com/hesedcasa/conni/issues/55)) ([f62f2d0](https://github.com/hesedcasa/conni/commit/f62f2d08ef48dfd4f72cd40558dbdf483b7dab86))
+
 ## [0.7.0](https://github.com/hesedcasa/conni/compare/v0.6.1...v0.7.0) (2026-05-10)
 
 
