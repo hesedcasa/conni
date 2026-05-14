@@ -18,6 +18,7 @@ describe('auth:update', () => {
     logMessages = []
 
     mockFs = {
+      async outputJSON() {},
       async readJSON() {
         return {
           auth: {
@@ -27,7 +28,6 @@ describe('auth:update', () => {
           },
         }
       },
-      async writeJSON() {},
     }
 
     mockTestConnection = async () => ({
