@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/hesedcasa/conni/compare/v0.7.1...v0.7.2) (2026-05-14)
+
+
+### 🛠️ Fixes
+
+* use outputJSON instead of writeJSON to ensure parent directories exist ([#59](https://github.com/hesedcasa/conni/issues/59)) ([41fa41e](https://github.com/hesedcasa/conni/commit/41fa41e6cee9d4bb8d88d6f19c81c0387f2740ff))
+
 ## [0.7.1](https://github.com/hesedcasa/conni/compare/v0.7.0...v0.7.1) (2026-05-10)
 
 
