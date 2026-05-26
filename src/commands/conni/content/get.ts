@@ -1,8 +1,7 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Args, Command, Flags} from '@oclif/core'
 
-import {createProfileManager} from '../../../config.js'
 import {clearClients, getContent} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class ContentGet extends Command {
   static override args = {

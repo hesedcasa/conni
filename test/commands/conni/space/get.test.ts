@@ -38,11 +38,11 @@ describe('space:get', () => {
     mockClearClients = () => {}
 
     SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -80,11 +80,11 @@ describe('space:get', () => {
     })
 
     SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceGet.default(['INVALID'], createMockConfig())
@@ -101,15 +101,15 @@ describe('space:get', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceGet.default(['DEV'], createMockConfig())
@@ -133,11 +133,11 @@ describe('space:get', () => {
     }
 
     SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceGet.default(['DEV'], createMockConfig())

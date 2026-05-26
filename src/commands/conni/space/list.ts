@@ -1,8 +1,7 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Command, Flags} from '@oclif/core'
 
-import {createProfileManager} from '../../../config.js'
 import {clearClients, listSpaces} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class SpaceList extends Command {
   static override description = 'List all Confluence spaces'

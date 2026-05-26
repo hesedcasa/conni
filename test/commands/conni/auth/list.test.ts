@@ -1,0 +1,12 @@
+import {expect} from 'chai'
+
+describe('auth:list', () => {
+  // Auth:list command is a thin wrapper around @hesed/plugin-lib's createAuthListCommand.
+  // The detailed functionality is tested in plugin-lib's own test suite.
+  it('exports the command', async () => {
+    const {default: AuthList} = await import('../../../../src/commands/conni/auth/list.js')
+
+    // Verify the command exists and is a function
+    expect(AuthList).to.be.a('function')
+  })
+})

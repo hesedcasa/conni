@@ -36,11 +36,11 @@ describe('space:list', () => {
     mockClearClients = () => {}
 
     SpaceList = await esmock('../../../../src/commands/conni/space/list.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         listSpaces: mockListSpaces,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -79,11 +79,11 @@ describe('space:list', () => {
     })
 
     SpaceList = await esmock('../../../../src/commands/conni/space/list.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         listSpaces: mockListSpaces,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceList.default([], createMockConfig())
@@ -100,15 +100,15 @@ describe('space:list', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     SpaceList = await esmock('../../../../src/commands/conni/space/list.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         listSpaces: mockListSpaces,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceList.default([], createMockConfig())
@@ -132,11 +132,11 @@ describe('space:list', () => {
     }
 
     SpaceList = await esmock('../../../../src/commands/conni/space/list.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         listSpaces: mockListSpaces,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceList.default([], createMockConfig())

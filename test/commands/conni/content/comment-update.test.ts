@@ -36,11 +36,11 @@ describe('content:comment-update', () => {
     mockClearClients = () => {}
 
     ContentUpdateComment = await esmock('../../../../src/commands/conni/content/comment-update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateComment: mockUpdateComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -80,11 +80,11 @@ describe('content:comment-update', () => {
     })
 
     ContentUpdateComment = await esmock('../../../../src/commands/conni/content/comment-update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateComment: mockUpdateComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdateComment.default(['9999999', 'Updated text'], createMockConfig())
@@ -101,15 +101,15 @@ describe('content:comment-update', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentUpdateComment = await esmock('../../../../src/commands/conni/content/comment-update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateComment: mockUpdateComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdateComment.default(['1544224770', 'Updated text'], createMockConfig())
@@ -133,11 +133,11 @@ describe('content:comment-update', () => {
     }
 
     ContentUpdateComment = await esmock('../../../../src/commands/conni/content/comment-update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateComment: mockUpdateComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdateComment.default(['1544224770', 'Updated text'], createMockConfig())

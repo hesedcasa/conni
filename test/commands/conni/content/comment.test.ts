@@ -33,11 +33,11 @@ describe('content:comment', () => {
     mockClearClients = () => {}
 
     ContentAddComment = await esmock('../../../../src/commands/conni/content/comment.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         addComment: mockAddComment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -74,11 +74,11 @@ describe('content:comment', () => {
     })
 
     ContentAddComment = await esmock('../../../../src/commands/conni/content/comment.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         addComment: mockAddComment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentAddComment.default(['123456', 'Test comment'], createMockConfig())
@@ -95,15 +95,15 @@ describe('content:comment', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentAddComment = await esmock('../../../../src/commands/conni/content/comment.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         addComment: mockAddComment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentAddComment.default(['123456', 'Test comment'], createMockConfig())
@@ -127,11 +127,11 @@ describe('content:comment', () => {
     }
 
     ContentAddComment = await esmock('../../../../src/commands/conni/content/comment.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         addComment: mockAddComment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentAddComment.default(['123456', 'Test comment'], createMockConfig())

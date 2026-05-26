@@ -1,9 +1,8 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Args, Command, Flags} from '@oclif/core'
 import fs from 'fs-extra'
 
-import {createProfileManager} from '../../../config.js'
 import {clearClients, updateContent} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class ContentUpdate extends Command {
   static override args = {

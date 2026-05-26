@@ -1,8 +1,7 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Args, Command, Flags} from '@oclif/core'
 
-import {createProfileManager} from '../../../config.js'
 import {clearClients, searchContents} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class ContentSearch extends Command {
   static override args = {
@@ -28,12 +27,7 @@ export default class ContentSearch extends Command {
       return
     }
 
-    const result = await searchContents(
-      auth,
-      args.cql,
-      flags.limit,
-      flags.expand ? flags.expand.split(',') : undefined,
-    )
+    const result = await searchContents(auth, args.cql, flags.limit, flags.expand ? flags.expand.split(',') : undefined)
     clearClients()
 
     if (flags.toon) {

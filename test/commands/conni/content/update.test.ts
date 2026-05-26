@@ -34,11 +34,11 @@ describe('content:update', () => {
     mockClearClients = () => {}
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -67,11 +67,11 @@ describe('content:update', () => {
     }
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdate.default(['123456', '--fields', 'title=Title=With=Equals'], createMockConfig())
@@ -92,11 +92,11 @@ describe('content:update', () => {
     }
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdate.default(['789012', '--fields', 'title=Test'], createMockConfig())
@@ -116,11 +116,11 @@ describe('content:update', () => {
     }
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdate.default(
@@ -143,11 +143,11 @@ describe('content:update', () => {
     })
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdate.default(['999999', '--fields', 'title=Test'], createMockConfig())
@@ -164,15 +164,15 @@ describe('content:update', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdate.default(['123456', '--fields', 'title=Test'], createMockConfig())
@@ -196,11 +196,11 @@ describe('content:update', () => {
     }
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdate.default(['123456', '--fields', 'title=Test'], createMockConfig())

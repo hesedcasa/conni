@@ -49,12 +49,12 @@ describe('content:create', () => {
     mockClearClients = () => {}
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
         createPageWithMedia: mockCreatePageWithMedia,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -84,12 +84,12 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
         createPageWithMedia: mockCreatePageWithMedia,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentCreate.default(
@@ -186,12 +186,12 @@ describe('content:create', () => {
     })
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
         createPageWithMedia: mockCreatePageWithMedia,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentCreate.default(
@@ -211,16 +211,16 @@ describe('content:create', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
         createPageWithMedia: mockCreatePageWithMedia,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentCreate.default(
@@ -248,12 +248,12 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
         createPageWithMedia: mockCreatePageWithMedia,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentCreate.default(
@@ -279,12 +279,12 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
         createPageWithMedia: mockCreatePageWithMedia,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentCreate.default(
@@ -327,12 +327,12 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
         createPageWithMedia: mockCreatePageWithMedia,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentCreate.default(
@@ -357,12 +357,12 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
         createPageWithMedia: mockCreatePageWithMedia,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentCreate.default(

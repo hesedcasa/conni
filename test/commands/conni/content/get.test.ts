@@ -37,11 +37,11 @@ describe('content:get', () => {
     mockClearClients = () => {}
 
     ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -79,11 +79,11 @@ describe('content:get', () => {
     })
 
     ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentGet.default(['999999'], createMockConfig())
@@ -100,15 +100,15 @@ describe('content:get', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentGet.default(['123456'], createMockConfig())
@@ -132,11 +132,11 @@ describe('content:get', () => {
     }
 
     ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentGet.default(['123456'], createMockConfig())

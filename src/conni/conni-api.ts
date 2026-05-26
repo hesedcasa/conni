@@ -3,9 +3,8 @@ import fs from 'fs-extra'
 import {markdownToAdf} from 'marklassian'
 
 type AdfDocument = ReturnType<typeof markdownToAdf>
-import path from 'node:path'
-
 import {type ApiResult, type AuthConfig} from '@hesed/plugin-lib'
+import path from 'node:path'
 
 /**
  * Confluence API Utility

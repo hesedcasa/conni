@@ -39,11 +39,11 @@ describe('content:search', () => {
     mockClearClients = () => {}
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -71,11 +71,11 @@ describe('content:search', () => {
     }
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV AND title ~ "Error"'], createMockConfig())
@@ -95,11 +95,11 @@ describe('content:search', () => {
     }
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV', '--limit', '20'], createMockConfig())
@@ -119,11 +119,11 @@ describe('content:search', () => {
     }
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV', '--expand', 'body.storage,version'], createMockConfig())
@@ -154,11 +154,11 @@ describe('content:search', () => {
     })
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['invalid cql'], createMockConfig())
@@ -175,15 +175,15 @@ describe('content:search', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV'], createMockConfig())
@@ -207,11 +207,11 @@ describe('content:search', () => {
     }
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV'], createMockConfig())

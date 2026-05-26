@@ -1,8 +1,7 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Args, Command, Flags} from '@oclif/core'
 
-import {createProfileManager} from '../../../config.js'
 import {clearClients, getSpace} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class SpaceGet extends Command {
   static override args = {

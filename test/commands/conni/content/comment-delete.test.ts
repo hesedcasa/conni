@@ -31,11 +31,11 @@ describe('content:comment-delete', () => {
     mockClearClients = () => {}
 
     ContentDeleteComment = await esmock('../../../../src/commands/conni/content/comment-delete.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteComment: mockDeleteComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -59,11 +59,11 @@ describe('content:comment-delete', () => {
     })
 
     ContentDeleteComment = await esmock('../../../../src/commands/conni/content/comment-delete.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteComment: mockDeleteComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDeleteComment.default(['9999999'], createMockConfig())
@@ -80,15 +80,15 @@ describe('content:comment-delete', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentDeleteComment = await esmock('../../../../src/commands/conni/content/comment-delete.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteComment: mockDeleteComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDeleteComment.default(['1544224770'], createMockConfig())
@@ -112,11 +112,11 @@ describe('content:comment-delete', () => {
     }
 
     ContentDeleteComment = await esmock('../../../../src/commands/conni/content/comment-delete.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteComment: mockDeleteComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDeleteComment.default(['1544224770'], createMockConfig())

@@ -1,9 +1,8 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Args, Command, Flags} from '@oclif/core'
 import {action} from '@oclif/core/ux'
 
-import {createProfileManager} from '../../../config.js'
 import {addAttachment, clearClients} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class ContentAttachment extends Command {
   /* eslint-disable perfectionist/sort-objects */

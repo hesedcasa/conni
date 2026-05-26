@@ -43,11 +43,11 @@ describe('content:attachment-download', () => {
     }
 
     ContentDownloadAttachment = await esmock('../../../../src/commands/conni/content/attachment-download.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         downloadAttachment: mockDownloadAttachment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
   })
@@ -98,11 +98,11 @@ describe('content:attachment-download', () => {
     })
 
     ContentDownloadAttachment = await esmock('../../../../src/commands/conni/content/attachment-download.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         downloadAttachment: mockDownloadAttachment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
@@ -120,15 +120,15 @@ describe('content:attachment-download', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentDownloadAttachment = await esmock('../../../../src/commands/conni/content/attachment-download.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         downloadAttachment: mockDownloadAttachment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
@@ -153,11 +153,11 @@ describe('content:attachment-download', () => {
     }
 
     ContentDownloadAttachment = await esmock('../../../../src/commands/conni/content/attachment-download.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         downloadAttachment: mockDownloadAttachment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 

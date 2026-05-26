@@ -31,11 +31,11 @@ describe('content:delete', () => {
     mockClearClients = () => {}
 
     ContentDelete = await esmock('../../../../src/commands/conni/content/delete.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteContent: mockDeleteContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -59,11 +59,11 @@ describe('content:delete', () => {
     })
 
     ContentDelete = await esmock('../../../../src/commands/conni/content/delete.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteContent: mockDeleteContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDelete.default(['999999'], createMockConfig())
@@ -80,15 +80,15 @@ describe('content:delete', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentDelete = await esmock('../../../../src/commands/conni/content/delete.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteContent: mockDeleteContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDelete.default(['123456'], createMockConfig())
@@ -112,11 +112,11 @@ describe('content:delete', () => {
     }
 
     ContentDelete = await esmock('../../../../src/commands/conni/content/delete.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteContent: mockDeleteContent,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDelete.default(['123456'], createMockConfig())

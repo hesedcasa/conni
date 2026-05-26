@@ -42,11 +42,11 @@ describe('content:attachment', () => {
     }
 
     ContentAttachment = await esmock('../../../../src/commands/conni/content/attachment.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         addAttachment: mockAddAttachment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
   })
@@ -84,11 +84,11 @@ describe('content:attachment', () => {
     })
 
     ContentAttachment = await esmock('../../../../src/commands/conni/content/attachment.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         addAttachment: mockAddAttachment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
@@ -106,15 +106,15 @@ describe('content:attachment', () => {
 
   it('exits early when config is not available', async () => {
     mockCreateProfileManager = () => ({
-      loadAuthConfig: async () => undefined,
+      async loadAuthConfig() {},
     })
 
     ContentAttachment = await esmock('../../../../src/commands/conni/content/attachment.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         addAttachment: mockAddAttachment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
@@ -139,11 +139,11 @@ describe('content:attachment', () => {
     }
 
     ContentAttachment = await esmock('../../../../src/commands/conni/content/attachment.js', {
-      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         addAttachment: mockAddAttachment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
