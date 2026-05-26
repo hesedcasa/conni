@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('content:search', () => {
   let ContentSearch: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockSearchContents: any
   let mockClearClients: any
   let jsonOutput: any
@@ -17,12 +17,12 @@ describe('content:search', () => {
     jsonOutput = null
     logOutput = []
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockSearchContents = async () => ({
@@ -39,11 +39,11 @@ describe('content:search', () => {
     mockClearClients = () => {}
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -71,11 +71,11 @@ describe('content:search', () => {
     }
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV AND title ~ "Error"'], createMockConfig())
@@ -95,11 +95,11 @@ describe('content:search', () => {
     }
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV', '--limit', '20'], createMockConfig())
@@ -119,11 +119,11 @@ describe('content:search', () => {
     }
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV', '--expand', 'body.storage,version'], createMockConfig())
@@ -154,11 +154,11 @@ describe('content:search', () => {
     })
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['invalid cql'], createMockConfig())
@@ -174,14 +174,16 @@ describe('content:search', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      async loadAuthConfig() {},
+    })
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV'], createMockConfig())
@@ -205,11 +207,11 @@ describe('content:search', () => {
     }
 
     ContentSearch = await esmock('../../../../src/commands/conni/content/search.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         searchContents: mockSearchContents,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentSearch.default(['space=DEV'], createMockConfig())

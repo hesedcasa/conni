@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('content:comment-update', () => {
   let ContentUpdateComment: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockUpdateComment: any
   let mockClearClients: any
   let jsonOutput: any
@@ -17,12 +17,12 @@ describe('content:comment-update', () => {
     jsonOutput = null
     logOutput = []
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockUpdateComment = async () => ({
@@ -36,11 +36,11 @@ describe('content:comment-update', () => {
     mockClearClients = () => {}
 
     ContentUpdateComment = await esmock('../../../../src/commands/conni/content/comment-update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateComment: mockUpdateComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -80,11 +80,11 @@ describe('content:comment-update', () => {
     })
 
     ContentUpdateComment = await esmock('../../../../src/commands/conni/content/comment-update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateComment: mockUpdateComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdateComment.default(['9999999', 'Updated text'], createMockConfig())
@@ -100,14 +100,16 @@ describe('content:comment-update', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      async loadAuthConfig() {},
+    })
 
     ContentUpdateComment = await esmock('../../../../src/commands/conni/content/comment-update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateComment: mockUpdateComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdateComment.default(['1544224770', 'Updated text'], createMockConfig())
@@ -131,11 +133,11 @@ describe('content:comment-update', () => {
     }
 
     ContentUpdateComment = await esmock('../../../../src/commands/conni/content/comment-update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateComment: mockUpdateComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentUpdateComment.default(['1544224770', 'Updated text'], createMockConfig())

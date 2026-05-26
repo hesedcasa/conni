@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('space:get', () => {
   let SpaceGet: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockGetSpace: any
   let mockClearClients: any
   let logOutput: string[]
@@ -17,12 +17,12 @@ describe('space:get', () => {
     logOutput = []
     jsonOutput = null
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockGetSpace = async (_config: any, spaceKey: string) => ({
@@ -38,11 +38,11 @@ describe('space:get', () => {
     mockClearClients = () => {}
 
     SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -80,11 +80,11 @@ describe('space:get', () => {
     })
 
     SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceGet.default(['INVALID'], createMockConfig())
@@ -100,14 +100,16 @@ describe('space:get', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      async loadAuthConfig() {},
+    })
 
     SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceGet.default(['DEV'], createMockConfig())
@@ -131,11 +133,11 @@ describe('space:get', () => {
     }
 
     SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceGet.default(['DEV'], createMockConfig())

@@ -1,8 +1,7 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Args, Command, Flags} from '@oclif/core'
 
-import {readConfig} from '../../../config.js'
 import {clearClients, updateComment} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class ContentUpdateComment extends Command {
   /* eslint-disable perfectionist/sort-objects */
@@ -23,12 +22,13 @@ export default class ContentUpdateComment extends Command {
 
   public async run(): Promise<void> {
     const {args, flags} = await this.parse(ContentUpdateComment)
-    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
-    if (!config) {
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const auth = await loadAuthConfig()
+    if (!auth) {
       return
     }
 
-    const result = await updateComment(config.auth, args.id, args.body)
+    const result = await updateComment(auth, args.id, args.body)
     clearClients()
 
     if (flags.toon) {

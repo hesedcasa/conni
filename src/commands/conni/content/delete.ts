@@ -1,8 +1,7 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Args, Command, Flags} from '@oclif/core'
 
-import {readConfig} from '../../../config.js'
 import {clearClients, deleteContent} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class ContentDelete extends Command {
   static override args = {
@@ -17,12 +16,13 @@ export default class ContentDelete extends Command {
 
   public async run(): Promise<void> {
     const {args, flags} = await this.parse(ContentDelete)
-    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
-    if (!config) {
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const auth = await loadAuthConfig()
+    if (!auth) {
       return
     }
 
-    const result = await deleteContent(config.auth, args.pageId)
+    const result = await deleteContent(auth, args.pageId)
     clearClients()
 
     if (flags.toon) {

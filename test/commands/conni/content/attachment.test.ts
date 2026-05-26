@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('content:attachment', () => {
   let ContentAttachment: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockAddAttachment: any
   let mockClearClients: any
   let mockAction: any
@@ -18,12 +18,12 @@ describe('content:attachment', () => {
     jsonOutput = null
     logOutput = []
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockAddAttachment = async () => ({
@@ -42,11 +42,11 @@ describe('content:attachment', () => {
     }
 
     ContentAttachment = await esmock('../../../../src/commands/conni/content/attachment.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         addAttachment: mockAddAttachment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
   })
@@ -84,11 +84,11 @@ describe('content:attachment', () => {
     })
 
     ContentAttachment = await esmock('../../../../src/commands/conni/content/attachment.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         addAttachment: mockAddAttachment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
@@ -105,14 +105,16 @@ describe('content:attachment', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      async loadAuthConfig() {},
+    })
 
     ContentAttachment = await esmock('../../../../src/commands/conni/content/attachment.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         addAttachment: mockAddAttachment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
@@ -137,11 +139,11 @@ describe('content:attachment', () => {
     }
 
     ContentAttachment = await esmock('../../../../src/commands/conni/content/attachment.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         addAttachment: mockAddAttachment,
         clearClients: mockClearClients,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 

@@ -1,9 +1,8 @@
+import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
 import {Command, Flags} from '@oclif/core'
 import fs from 'fs-extra'
 
-import {readConfig} from '../../../config.js'
 import {clearClients, createPage, createPageWithMedia} from '../../../conni/conni-client.js'
-import {formatAsToon} from '../../../format.js'
 
 export default class ContentCreate extends Command {
   static override args = {}
@@ -38,8 +37,9 @@ export default class ContentCreate extends Command {
 
   public async run(): Promise<void> {
     const {flags} = await this.parse(ContentCreate)
-    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
-    if (!config) {
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const auth = await loadAuthConfig()
+    if (!auth) {
       return
     }
 
@@ -69,9 +69,7 @@ export default class ContentCreate extends Command {
       fields.fullWidth = 'true'
     }
 
-    const result = flags.attach
-      ? await createPageWithMedia(config.auth, fields, flags.attach)
-      : await createPage(config.auth, fields)
+    const result = flags.attach ? await createPageWithMedia(auth, fields, flags.attach) : await createPage(auth, fields)
     clearClients()
 
     if (flags.toon) {

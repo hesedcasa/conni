@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('space:list', () => {
   let SpaceList: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockListSpaces: any
   let mockClearClients: any
   let jsonOutput: any
@@ -17,12 +17,12 @@ describe('space:list', () => {
     jsonOutput = null
     logOutput = []
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockListSpaces = async () => ({
@@ -36,11 +36,11 @@ describe('space:list', () => {
     mockClearClients = () => {}
 
     SpaceList = await esmock('../../../../src/commands/conni/space/list.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         listSpaces: mockListSpaces,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -79,11 +79,11 @@ describe('space:list', () => {
     })
 
     SpaceList = await esmock('../../../../src/commands/conni/space/list.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         listSpaces: mockListSpaces,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceList.default([], createMockConfig())
@@ -99,14 +99,16 @@ describe('space:list', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      async loadAuthConfig() {},
+    })
 
     SpaceList = await esmock('../../../../src/commands/conni/space/list.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         listSpaces: mockListSpaces,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceList.default([], createMockConfig())
@@ -130,11 +132,11 @@ describe('space:list', () => {
     }
 
     SpaceList = await esmock('../../../../src/commands/conni/space/list.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         listSpaces: mockListSpaces,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new SpaceList.default([], createMockConfig())

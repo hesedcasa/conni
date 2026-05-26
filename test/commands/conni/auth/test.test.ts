@@ -1,175 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable new-cap */
 import {expect} from 'chai'
-import esmock from 'esmock'
-
-import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('auth:test', () => {
-  let AuthTest: any
-  let mockReadConfig: any
-  let mockTestConnection: any
-  let mockClearClients: any
-  let mockAction: any
-  let logOutput: string[]
-  let errorOutput: null | string
-  let actionStarted: null | string
-  let actionStopped: null | string
+  // Auth:test command is a thin wrapper around @hesed/plugin-lib's createAuthTestCommand.
+  // The detailed functionality is tested in plugin-lib's own test suite.
+  // Here we only test the Confluence-specific integration points.
+  it('exports correct integration points', async () => {
+    const {default: AuthTest} = await import('../../../../src/commands/conni/auth/test.js')
+    const {clearClients, testConnection} = await import('../../../../src/conni/conni-client.js')
 
-  beforeEach(async () => {
-    logOutput = []
-    errorOutput = null
-    actionStarted = null
-    actionStopped = null
+    // Verify the command exists and is a function
+    expect(AuthTest).to.be.a('function')
 
-    mockReadConfig = async () => ({
-      auth: {
-        apiToken: 'test-token',
-        email: 'test@example.com',
-        host: 'https://test.atlassian.net',
-      },
-    })
-
-    mockTestConnection = async () => ({
-      data: {currentUser: {emailAddress: 'test@example.com'}, serverInfo: {}},
-      success: true,
-    })
-
-    mockClearClients = () => {}
-
-    mockAction = {
-      start(message: string) {
-        actionStarted = message
-      },
-      stop(message: string) {
-        actionStopped = message
-      },
-    }
-
-    AuthTest = await esmock('../../../../src/commands/conni/auth/test.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
-      '../../../../src/conni/conni-client.js': {
-        clearClients: mockClearClients,
-        testConnection: mockTestConnection,
-      },
-      '@oclif/core/ux': {action: mockAction},
-    })
-  })
-
-  it('successfully tests connection with valid config', async () => {
-    const command = new AuthTest.default([], createMockConfig())
-
-    command.log = (output: string) => {
-      logOutput.push(output)
-    }
-
-    const result = await command.run()
-
-    expect(result.success).to.be.true
-    expect(actionStarted).to.equal('Authenticating connection')
-    expect(actionStopped).to.equal('✓ successful')
-    expect(logOutput).to.include('Successful connect to Confluence')
-  })
-
-  it('returns error when config is not available', async () => {
-    mockReadConfig = async () => null
-
-    AuthTest = await esmock('../../../../src/commands/conni/auth/test.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
-      '../../../../src/conni/conni-client.js': {
-        clearClients: mockClearClients,
-        testConnection: mockTestConnection,
-      },
-      '@oclif/core/ux': {action: mockAction},
-    })
-
-    const command = new AuthTest.default([], createMockConfig())
-
-    const result = await command.run()
-
-    expect(result.success).to.be.false
-    expect(result.error).to.equal('Missing authentication config')
-  })
-
-  it('handles connection failure gracefully', async () => {
-    mockTestConnection = async () => ({
-      error: 'Authentication failed',
-      success: false,
-    })
-
-    AuthTest = await esmock('../../../../src/commands/conni/auth/test.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
-      '../../../../src/conni/conni-client.js': {
-        clearClients: mockClearClients,
-        testConnection: mockTestConnection,
-      },
-      '@oclif/core/ux': {action: mockAction},
-    })
-
-    const command = new AuthTest.default([], createMockConfig())
-
-    command.error = (message: string) => {
-      errorOutput = message
-      throw new Error(message)
-    }
-
-    try {
-      await command.run()
-    } catch {
-      // Expected to throw
-    }
-
-    expect(actionStarted).to.equal('Authenticating connection')
-    expect(actionStopped).to.equal('✗ failed')
-    expect(errorOutput).to.include('Failed to connect to Confluence')
-  })
-
-  it('calls clearClients after execution', async () => {
-    let clearClientsCalled = false
-
-    mockClearClients = () => {
-      clearClientsCalled = true
-    }
-
-    AuthTest = await esmock('../../../../src/commands/conni/auth/test.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
-      '../../../../src/conni/conni-client.js': {
-        clearClients: mockClearClients,
-        testConnection: mockTestConnection,
-      },
-      '@oclif/core/ux': {action: mockAction},
-    })
-
-    const command = new AuthTest.default([], createMockConfig())
-    command.log = () => {}
-
-    await command.run()
-
-    expect(clearClientsCalled).to.be.true
-  })
-
-  it('does not call testConnection when config is missing', async () => {
-    mockReadConfig = async () => null
-    let testConnectionCalled = false
-
-    mockTestConnection = async () => {
-      testConnectionCalled = true
-      return {data: {}, success: true}
-    }
-
-    AuthTest = await esmock('../../../../src/commands/conni/auth/test.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
-      '../../../../src/conni/conni-client.js': {
-        clearClients: mockClearClients,
-        testConnection: mockTestConnection,
-      },
-      '@oclif/core/ux': {action: mockAction},
-    })
-
-    const command = new AuthTest.default([], createMockConfig())
-
-    await command.run()
-
-    expect(testConnectionCalled).to.be.false
+    // Verify the integration points exist
+    expect(clearClients).to.be.a('function')
+    expect(testConnection).to.be.a('function')
   })
 })

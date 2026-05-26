@@ -3,22 +3,8 @@ import fs from 'fs-extra'
 import {markdownToAdf} from 'marklassian'
 
 type AdfDocument = ReturnType<typeof markdownToAdf>
+import {type ApiResult, type AuthConfig} from '@hesed/plugin-lib'
 import path from 'node:path'
-
-/**
- * Generic API result
- */
-export interface ApiResult {
-  data?: unknown
-  error?: unknown
-  success: boolean
-}
-
-export interface Config {
-  apiToken: string
-  email?: string
-  host: string
-}
 
 /**
  * Confluence API Utility
@@ -26,9 +12,9 @@ export interface Config {
  */
 export class ConniApi {
   private client?: ConfluenceClient
-  private config: Config
+  private config: AuthConfig
 
-  constructor(config: Config) {
+  constructor(config: AuthConfig) {
     this.config = config
   }
 

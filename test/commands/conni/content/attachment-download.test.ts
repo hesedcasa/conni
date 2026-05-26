@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('content:attachment-download', () => {
   let ContentDownloadAttachment: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockDownloadAttachment: any
   let mockClearClients: any
   let mockAction: any
@@ -18,12 +18,12 @@ describe('content:attachment-download', () => {
     jsonOutput = null
     logOutput = []
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockDownloadAttachment = async () => ({
@@ -43,11 +43,11 @@ describe('content:attachment-download', () => {
     }
 
     ContentDownloadAttachment = await esmock('../../../../src/commands/conni/content/attachment-download.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         downloadAttachment: mockDownloadAttachment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
   })
@@ -98,11 +98,11 @@ describe('content:attachment-download', () => {
     })
 
     ContentDownloadAttachment = await esmock('../../../../src/commands/conni/content/attachment-download.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         downloadAttachment: mockDownloadAttachment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
@@ -119,14 +119,16 @@ describe('content:attachment-download', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      async loadAuthConfig() {},
+    })
 
     ContentDownloadAttachment = await esmock('../../../../src/commands/conni/content/attachment-download.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         downloadAttachment: mockDownloadAttachment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 
@@ -151,11 +153,11 @@ describe('content:attachment-download', () => {
     }
 
     ContentDownloadAttachment = await esmock('../../../../src/commands/conni/content/attachment-download.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         downloadAttachment: mockDownloadAttachment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '@oclif/core/ux': {action: mockAction},
     })
 

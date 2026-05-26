@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('content:comment-delete', () => {
   let ContentDeleteComment: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockDeleteComment: any
   let mockClearClients: any
   let jsonOutput: any
@@ -15,12 +15,12 @@ describe('content:comment-delete', () => {
   beforeEach(async () => {
     jsonOutput = null
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockDeleteComment = async () => ({
@@ -31,11 +31,11 @@ describe('content:comment-delete', () => {
     mockClearClients = () => {}
 
     ContentDeleteComment = await esmock('../../../../src/commands/conni/content/comment-delete.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteComment: mockDeleteComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
   })
 
@@ -59,11 +59,11 @@ describe('content:comment-delete', () => {
     })
 
     ContentDeleteComment = await esmock('../../../../src/commands/conni/content/comment-delete.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteComment: mockDeleteComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDeleteComment.default(['9999999'], createMockConfig())
@@ -79,14 +79,16 @@ describe('content:comment-delete', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      async loadAuthConfig() {},
+    })
 
     ContentDeleteComment = await esmock('../../../../src/commands/conni/content/comment-delete.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteComment: mockDeleteComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDeleteComment.default(['1544224770'], createMockConfig())
@@ -110,11 +112,11 @@ describe('content:comment-delete', () => {
     }
 
     ContentDeleteComment = await esmock('../../../../src/commands/conni/content/comment-delete.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         deleteComment: mockDeleteComment,
       },
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
     })
 
     const command = new ContentDeleteComment.default(['1544224770'], createMockConfig())
