@@ -1,6 +1,6 @@
 import {Args, Command, Flags} from '@oclif/core'
 
-import {readConfig} from '../../../config.js'
+import {createProfileManager} from '../../../config.js'
 import {clearClients, getContent} from '../../../conni/conni-client.js'
 import {formatAsToon} from '../../../format.js'
 
@@ -17,12 +17,13 @@ export default class ContentGet extends Command {
 
   public async run(): Promise<void> {
     const {args, flags} = await this.parse(ContentGet)
-    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
-    if (!config) {
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const auth = await loadAuthConfig()
+    if (!auth) {
       return
     }
 
-    const result = await getContent(config.auth, args.pageId)
+    const result = await getContent(auth, args.pageId)
     clearClients()
 
     if (flags.toon) {

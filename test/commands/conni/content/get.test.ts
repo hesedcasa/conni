@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('content:get', () => {
   let ContentGet: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockGetContent: any
   let mockClearClients: any
   let logOutput: string[]
@@ -17,12 +17,12 @@ describe('content:get', () => {
     logOutput = []
     jsonOutput = null
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockGetContent = async (_config: any, id: string) => ({
@@ -37,7 +37,7 @@ describe('content:get', () => {
     mockClearClients = () => {}
 
     ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
@@ -79,7 +79,7 @@ describe('content:get', () => {
     })
 
     ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
@@ -99,10 +99,12 @@ describe('content:get', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => undefined,
+    })
 
     ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
@@ -130,7 +132,7 @@ describe('content:get', () => {
     }
 
     ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,

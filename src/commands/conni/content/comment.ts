@@ -1,6 +1,6 @@
 import {Args, Command, Flags} from '@oclif/core'
 
-import {readConfig} from '../../../config.js'
+import {createProfileManager} from '../../../config.js'
 import {addComment, clearClients} from '../../../conni/conni-client.js'
 import {formatAsToon} from '../../../format.js'
 
@@ -23,12 +23,13 @@ export default class ContentAddComment extends Command {
 
   public async run(): Promise<void> {
     const {args, flags} = await this.parse(ContentAddComment)
-    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
-    if (!config) {
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const auth = await loadAuthConfig()
+    if (!auth) {
       return
     }
 
-    const result = await addComment(config.auth, args.pageId, args.body)
+    const result = await addComment(auth, args.pageId, args.body)
     clearClients()
 
     if (flags.toon) {

@@ -1,7 +1,7 @@
 import {Command, Flags} from '@oclif/core'
 import fs from 'fs-extra'
 
-import {readConfig} from '../../../config.js'
+import {createProfileManager} from '../../../config.js'
 import {clearClients, createPage, createPageWithMedia} from '../../../conni/conni-client.js'
 import {formatAsToon} from '../../../format.js'
 
@@ -38,8 +38,9 @@ export default class ContentCreate extends Command {
 
   public async run(): Promise<void> {
     const {flags} = await this.parse(ContentCreate)
-    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
-    if (!config) {
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const auth = await loadAuthConfig()
+    if (!auth) {
       return
     }
 
@@ -70,8 +71,8 @@ export default class ContentCreate extends Command {
     }
 
     const result = flags.attach
-      ? await createPageWithMedia(config.auth, fields, flags.attach)
-      : await createPage(config.auth, fields)
+      ? await createPageWithMedia(auth, fields, flags.attach)
+      : await createPage(auth, fields)
     clearClients()
 
     if (flags.toon) {

@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('content:create', () => {
   let ContentCreate: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockCreatePage: any
   let mockCreatePageWithMedia: any
   let mockClearClients: any
@@ -20,12 +20,12 @@ describe('content:create', () => {
     logOutput = []
     errorOutput = null
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockCreatePage = async (_config: any, _fields: any) => ({
@@ -49,7 +49,7 @@ describe('content:create', () => {
     mockClearClients = () => {}
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
@@ -84,7 +84,7 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
@@ -186,7 +186,7 @@ describe('content:create', () => {
     })
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
@@ -210,10 +210,12 @@ describe('content:create', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => undefined,
+    })
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
@@ -246,7 +248,7 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
@@ -277,7 +279,7 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
@@ -325,7 +327,7 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,
@@ -355,7 +357,7 @@ describe('content:create', () => {
     }
 
     ContentCreate = await esmock('../../../../src/commands/conni/content/create.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         createPage: mockCreatePage,

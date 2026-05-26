@@ -1,7 +1,7 @@
 import {Args, Command, Flags} from '@oclif/core'
 import {action} from '@oclif/core/ux'
 
-import {readConfig} from '../../../config.js'
+import {createProfileManager} from '../../../config.js'
 import {clearClients, downloadAttachment} from '../../../conni/conni-client.js'
 import {formatAsToon} from '../../../format.js'
 
@@ -22,8 +22,9 @@ export default class ContentDownloadAttachment extends Command {
 
   public async run(): Promise<void> {
     const {args, flags} = await this.parse(ContentDownloadAttachment)
-    const config = await readConfig(this.config.configDir, this.log.bind(this), flags.profile)
-    if (!config) {
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const auth = await loadAuthConfig()
+    if (!auth) {
       return
     }
 
@@ -33,7 +34,7 @@ export default class ContentDownloadAttachment extends Command {
 
     action.start(`Downloading attachment "${args.attachmentId}" to ""`)
 
-    const result = await downloadAttachment(config.auth, args.attachmentId, args.outputPath)
+    const result = await downloadAttachment(auth, args.attachmentId, args.outputPath)
     clearClients()
 
     if (result.success) {

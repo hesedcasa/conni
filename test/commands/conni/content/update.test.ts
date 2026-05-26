@@ -7,7 +7,7 @@ import {createMockConfig} from '../../../helpers/config-mock.js'
 
 describe('content:update', () => {
   let ContentUpdate: any
-  let mockReadConfig: any
+  let mockCreateProfileManager: any
   let mockUpdateContent: any
   let mockClearClients: any
   let jsonOutput: any
@@ -15,12 +15,12 @@ describe('content:update', () => {
   beforeEach(async () => {
     jsonOutput = null
 
-    mockReadConfig = async () => ({
-      auth: {
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => ({
         apiToken: 'test-token',
         email: 'test@example.com',
         host: 'https://test.atlassian.net',
-      },
+      }),
     })
 
     mockUpdateContent = async (_config: any, _pageId: string, _fields: any) => ({
@@ -34,7 +34,7 @@ describe('content:update', () => {
     mockClearClients = () => {}
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
@@ -67,7 +67,7 @@ describe('content:update', () => {
     }
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
@@ -92,7 +92,7 @@ describe('content:update', () => {
     }
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
@@ -116,7 +116,7 @@ describe('content:update', () => {
     }
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
@@ -143,7 +143,7 @@ describe('content:update', () => {
     })
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
@@ -163,10 +163,12 @@ describe('content:update', () => {
   })
 
   it('exits early when config is not available', async () => {
-    mockReadConfig = async () => null
+    mockCreateProfileManager = () => ({
+      loadAuthConfig: async () => undefined,
+    })
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
@@ -194,7 +196,7 @@ describe('content:update', () => {
     }
 
     ContentUpdate = await esmock('../../../../src/commands/conni/content/update.js', {
-      '../../../../src/config.js': {readConfig: mockReadConfig},
+      '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         updateContent: mockUpdateContent,
