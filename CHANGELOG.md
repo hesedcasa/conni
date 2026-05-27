@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/hesedcasa/conni/compare/v0.7.2...v0.8.0) (2026-05-27)
+
+
+### 🎉 Features
+
+* add auth delete command ([#67](https://github.com/hesedcasa/conni/issues/67)) ([775a4e0](https://github.com/hesedcasa/conni/commit/775a4e07081ddbecf0d21fcdd2e37b3d7deaa457))
+
+
+### ♻️ Chores
+
+* migrate auth commands and format to @hesed/plugin-lib ([#66](https://github.com/hesedcasa/conni/issues/66)) ([89e5841](https://github.com/hesedcasa/conni/commit/89e5841a5504b76ebb7635d1f8c7c03be43d87c7))
+
 ## [0.7.2](https://github.com/hesedcasa/conni/compare/v0.7.1...v0.7.2) (2026-05-14)
 
 
