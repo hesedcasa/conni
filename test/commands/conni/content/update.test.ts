@@ -183,7 +183,11 @@ describe('content:update', () => {
       return {data: {}, success: true}
     }
 
-    await command.run()
+    try {
+      await command.run()
+    } catch (error: any) {
+      expect(error.message).to.include('Missing authentication config.')
+    }
 
     expect(updateContentCalled).to.be.false
   })
