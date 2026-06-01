@@ -322,7 +322,7 @@ export class ConniApi {
               accessToken: this.config.apiToken,
             },
           },
-      host: this.config.host,
+      host: this.config.host!,
     })
 
     return this.client

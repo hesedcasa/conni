@@ -24,7 +24,7 @@ export default class ContentSearch extends Command {
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
     const auth = await loadAuthConfig()
     if (!auth) {
-      return
+      this.error(`Missing authentication config.`)
     }
 
     const result = await searchContents(auth, args.cql, flags.limit, flags.expand ? flags.expand.split(',') : undefined)

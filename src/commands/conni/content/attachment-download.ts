@@ -24,7 +24,7 @@ export default class ContentDownloadAttachment extends Command {
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
     const auth = await loadAuthConfig()
     if (!auth) {
-      return
+      this.error(`Missing authentication config.`)
     }
 
     if (!args.outputPath) {
