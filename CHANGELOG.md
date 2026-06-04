@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/hesedcasa/conni/compare/v0.8.0...v0.9.0) (2026-06-04)
+
+
+### 🎉 Features
+
+* upgrade @hesed/plugin-lib to 0.9.0 and pass configFile to auth commands ([f7d3e7f](https://github.com/hesedcasa/conni/commit/f7d3e7f6cc3f73e4b0fe6eb63abd94f1cceb329b))
+
 ## [0.8.0](https://github.com/hesedcasa/conni/compare/v0.7.2...v0.8.0) (2026-05-27)
 
 
