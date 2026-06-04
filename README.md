@@ -26,7 +26,7 @@ $ npm install -g @hesed/conni
 $ conni COMMAND
 running command...
 $ conni (--version)
-@hesed/conni/0.8.0 linux-x64 node-v22.22.3
+@hesed/conni/0.9.0 linux-x64 node-v22.22.3
 $ conni --help [COMMAND]
 USAGE
   $ conni COMMAND
@@ -62,13 +62,13 @@ Add Confluence authentication
 
 ```
 USAGE
-  $ conni conni auth add -t <value> -u <value> [--json] [-e <value>] [-p <value>]
+  $ conni conni auth add -p <value> -t <value> -e <value> -u <value> [--json]
 
 FLAGS
-  -e, --email=<value>    Account email
-  -p, --profile=<value>  Profile name
-  -t, --token=<value>    (required) API Token
-  -u, --url=<value>      (required) Confluence instance URL (start with https://)
+  -e, --email=<value>     (required) Account email
+  -p, --profile=<value>   (required) Profile name
+  -t, --apiToken=<value>  (required) API Token
+  -u, --host=<value>      (required) Confluence instance URL
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -79,10 +79,10 @@ DESCRIPTION
 EXAMPLES
   $ conni conni auth add
 
-  $ conni conni auth add --profile work
+  $ conni conni auth add -p prod
 ```
 
-_See code: [src/commands/conni/auth/add.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/auth/add.ts)_
+_See code: [src/commands/conni/auth/add.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/auth/add.ts)_
 
 ## `conni conni auth delete`
 
@@ -93,7 +93,7 @@ USAGE
   $ conni conni auth delete [--json] [-p <value>]
 
 FLAGS
-  -p, --profile=<value>  Profile name to delete
+  -p, --profile=<value>  Profile to delete
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -104,10 +104,10 @@ DESCRIPTION
 EXAMPLES
   $ conni conni auth delete
 
-  $ conni conni auth delete --profile work
+  $ conni conni auth delete -p prod
 ```
 
-_See code: [src/commands/conni/auth/delete.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/auth/delete.ts)_
+_See code: [src/commands/conni/auth/delete.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/auth/delete.ts)_
 
 ## `conni conni auth list`
 
@@ -127,7 +127,7 @@ EXAMPLES
   $ conni conni auth list
 ```
 
-_See code: [src/commands/conni/auth/list.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/auth/list.ts)_
+_See code: [src/commands/conni/auth/list.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/auth/list.ts)_
 
 ## `conni conni auth profile`
 
@@ -138,7 +138,7 @@ USAGE
   $ conni conni auth profile [--json] [--default <value>]
 
 FLAGS
-  --default=<value>  Profile name to set as default
+  --default=<value>  Profile to set as default
 
 GLOBAL FLAGS
   --json  Format output as json.
@@ -149,10 +149,10 @@ DESCRIPTION
 EXAMPLES
   $ conni conni auth profile
 
-  $ conni conni auth profile --default work
+  $ conni conni auth profile --default test
 ```
 
-_See code: [src/commands/conni/auth/profile.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/auth/profile.ts)_
+_See code: [src/commands/conni/auth/profile.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/auth/profile.ts)_
 
 ## `conni conni auth test`
 
@@ -174,38 +174,38 @@ DESCRIPTION
 EXAMPLES
   $ conni conni auth test
 
-  $ conni conni auth test --profile work
+  $ conni conni auth test -p prod
 ```
 
-_See code: [src/commands/conni/auth/test.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/auth/test.ts)_
+_See code: [src/commands/conni/auth/test.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/auth/test.ts)_
 
 ## `conni conni auth update`
 
-Update existing authentication profile
+Update Confluence authentication
 
 ```
 USAGE
-  $ conni conni auth update -t <value> -u <value> [--json] [-e <value>] [-p <value>]
+  $ conni conni auth update -p <value> -t <value> -e <value> -u <value> [--json]
 
 FLAGS
-  -e, --email=<value>    Account email
-  -p, --profile=<value>  Profile name to update (default: "default")
-  -t, --token=<value>    (required) API Token
-  -u, --url=<value>      (required) Confluence instance URL (start with https://)
+  -e, --email=<value>     (required) Account email
+  -p, --profile=<value>   (required) Profile name
+  -t, --apiToken=<value>  (required) API Token
+  -u, --host=<value>      (required) Confluence instance URL
 
 GLOBAL FLAGS
   --json  Format output as json.
 
 DESCRIPTION
-  Update existing authentication profile
+  Update Confluence authentication
 
 EXAMPLES
   $ conni conni auth update
 
-  $ conni conni auth update --profile work
+  $ conni conni auth update -p test
 ```
 
-_See code: [src/commands/conni/auth/update.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/auth/update.ts)_
+_See code: [src/commands/conni/auth/update.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/auth/update.ts)_
 
 ## `conni conni content attachment PAGEID FILE`
 
@@ -230,7 +230,7 @@ EXAMPLES
   $ conni conni content attachment 123456 ./document.pdf
 ```
 
-_See code: [src/commands/conni/content/attachment.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/attachment.ts)_
+_See code: [src/commands/conni/content/attachment.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/attachment.ts)_
 
 ## `conni conni content attachment-download ATTACHMENTID [OUTPUTPATH]`
 
@@ -257,7 +257,7 @@ EXAMPLES
   $ conni conni content attachment-download att12345 ./document.pdf
 ```
 
-_See code: [src/commands/conni/content/attachment-download.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/attachment-download.ts)_
+_See code: [src/commands/conni/content/attachment-download.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/attachment-download.ts)_
 
 ## `conni conni content comment PAGEID BODY`
 
@@ -291,7 +291,7 @@ EXAMPLES
   $ conni conni content comment 123456 "$(cat content.md)"
 ```
 
-_See code: [src/commands/conni/content/comment.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/comment.ts)_
+_See code: [src/commands/conni/content/comment.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/comment.ts)_
 
 ## `conni conni content comment-delete ID`
 
@@ -315,7 +315,7 @@ EXAMPLES
   $ conni conni content comment-delete 1544224770
 ```
 
-_See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/comment-delete.ts)_
+_See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/comment-delete.ts)_
 
 ## `conni conni content comment-update ID BODY`
 
@@ -349,7 +349,7 @@ EXAMPLES
   $ conni conni content comment-update 1544224770 "$(cat content.md)"
 ```
 
-_See code: [src/commands/conni/content/comment-update.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/comment-update.ts)_
+_See code: [src/commands/conni/content/comment-update.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/comment-update.ts)_
 
 ## `conni conni content create`
 
@@ -396,7 +396,7 @@ FLAG DESCRIPTIONS
     Content fields in key=value format. Use @file to read value from a file (e.g. body=@content.xml)
 ```
 
-_See code: [src/commands/conni/content/create.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/create.ts)_
+_See code: [src/commands/conni/content/create.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/create.ts)_
 
 ## `conni conni content delete PAGEID`
 
@@ -420,7 +420,7 @@ EXAMPLES
   $ conni conni content delete 1543634992
 ```
 
-_See code: [src/commands/conni/content/delete.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/delete.ts)_
+_See code: [src/commands/conni/content/delete.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/delete.ts)_
 
 ## `conni conni content get PAGEID`
 
@@ -444,7 +444,7 @@ EXAMPLES
   $ conni conni content get 1544060948
 ```
 
-_See code: [src/commands/conni/content/get.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/get.ts)_
+_See code: [src/commands/conni/content/get.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/get.ts)_
 
 ## `conni conni content search CQL`
 
@@ -472,7 +472,7 @@ EXAMPLES
   $ conni conni content search 'created > startOfMonth()' --limit=5 --expand=body,version
 ```
 
-_See code: [src/commands/conni/content/search.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/search.ts)_
+_See code: [src/commands/conni/content/search.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/search.ts)_
 
 ## `conni conni content update PAGEID`
 
@@ -512,7 +512,7 @@ EXAMPLES
   $ conni conni content update 1076199489 --fields body=@storage.xml representation=storage --full-width
 ```
 
-_See code: [src/commands/conni/content/update.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/content/update.ts)_
+_See code: [src/commands/conni/content/update.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/content/update.ts)_
 
 ## `conni conni space get SPACEKEY`
 
@@ -536,7 +536,7 @@ EXAMPLES
   $ conni conni space get DEV
 ```
 
-_See code: [src/commands/conni/space/get.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/space/get.ts)_
+_See code: [src/commands/conni/space/get.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/space/get.ts)_
 
 ## `conni conni space list`
 
@@ -557,5 +557,5 @@ EXAMPLES
   $ conni conni space list
 ```
 
-_See code: [src/commands/conni/space/list.ts](https://github.com/hesedcasa/conni/blob/v0.8.0/src/commands/conni/space/list.ts)_
+_See code: [src/commands/conni/space/list.ts](https://github.com/hesedcasa/conni/blob/v0.9.0/src/commands/conni/space/list.ts)_
 <!-- commandsstop -->
