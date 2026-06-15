@@ -37,7 +37,7 @@ export default class ContentCreate extends Command {
 
   public async run(): Promise<void> {
     const {flags} = await this.parse(ContentCreate)
-    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
     if (!auth) {
       this.error(`Missing authentication config.`)

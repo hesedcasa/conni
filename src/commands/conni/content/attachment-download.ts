@@ -21,7 +21,7 @@ export default class ContentDownloadAttachment extends Command {
 
   public async run(): Promise<void> {
     const {args, flags} = await this.parse(ContentDownloadAttachment)
-    const {loadAuthConfig} = createProfileManager(this.config, flags.profile)
+    const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
     if (!auth) {
       this.error(`Missing authentication config.`)
