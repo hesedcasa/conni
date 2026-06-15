@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/hesedcasa/conni/compare/v0.9.0...v0.9.1) (2026-06-15)
+
+
+### 🛠️ Fixes
+
+* pass conni-config.json filename to createProfileManager in all commands ([c54af41](https://github.com/hesedcasa/conni/commit/c54af415730fc3ad06199ebceb97982c05242665))
+
 ## [0.9.0](https://github.com/hesedcasa/conni/compare/v0.8.0...v0.9.0) (2026-06-04)
 
 
