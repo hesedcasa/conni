@@ -10,11 +10,8 @@ describe('content:comment-delete', () => {
   let mockCreateProfileManager: any
   let mockDeleteComment: any
   let mockClearClients: any
-  let jsonOutput: any
 
   beforeEach(async () => {
-    jsonOutput = null
-
     mockCreateProfileManager = () => ({
       loadAuthConfig: async () => ({
         apiToken: 'test-token',
@@ -42,14 +39,10 @@ describe('content:comment-delete', () => {
   it('deletes comment successfully', async () => {
     const command = new ContentDeleteComment.default(['1544224770'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
   })
 
   it('handles API errors gracefully', async () => {
@@ -68,14 +61,10 @@ describe('content:comment-delete', () => {
 
     const command = new ContentDeleteComment.default(['9999999'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Comment not found')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Comment not found')
   })
 
   it('exits early when config is not available', async () => {
@@ -124,7 +113,6 @@ describe('content:comment-delete', () => {
     })
 
     const command = new ContentDeleteComment.default(['1544224770'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 

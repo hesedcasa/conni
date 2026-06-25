@@ -1,10 +1,11 @@
-import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
-import {Command, Flags} from '@oclif/core'
+import {type ApiResult, createProfileManager, formatAsToon} from '@hesed/plugin-lib'
+import {Flags} from '@oclif/core'
 import fs from 'fs-extra'
 
+import {BaseCommand} from '../../../base-command.js'
 import {clearClients, createPage, createPageWithMedia} from '../../../conni/conni-client.js'
 
-export default class ContentCreate extends Command {
+export default class ContentCreate extends BaseCommand {
   static override args = {}
   static override description = 'Create a new Confluence page'
   static override examples = [
@@ -35,7 +36,7 @@ export default class ContentCreate extends Command {
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
 
-  public async run(): Promise<void> {
+  public async run(): Promise<ApiResult> {
     const {flags} = await this.parse(ContentCreate)
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
@@ -74,8 +75,8 @@ export default class ContentCreate extends Command {
 
     if (flags.toon) {
       this.log(formatAsToon(result))
-    } else {
-      this.logJson(result)
     }
+
+    return result
   }
 }

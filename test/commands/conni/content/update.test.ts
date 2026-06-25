@@ -10,11 +10,8 @@ describe('content:update', () => {
   let mockCreateProfileManager: any
   let mockUpdateContent: any
   let mockClearClients: any
-  let jsonOutput: any
 
   beforeEach(async () => {
-    jsonOutput = null
-
     mockCreateProfileManager = () => ({
       loadAuthConfig: async () => ({
         apiToken: 'test-token',
@@ -48,14 +45,10 @@ describe('content:update', () => {
       createMockConfig(),
     )
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
   })
 
   it('parses fields with equals signs in values correctly', async () => {
@@ -75,8 +68,6 @@ describe('content:update', () => {
     })
 
     const command = new ContentUpdate.default(['123456', '--fields', 'title=Title=With=Equals'], createMockConfig())
-
-    command.logJson = () => {}
 
     await command.run()
 
@@ -100,7 +91,6 @@ describe('content:update', () => {
     })
 
     const command = new ContentUpdate.default(['789012', '--fields', 'title=Test'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 
@@ -128,8 +118,6 @@ describe('content:update', () => {
       createMockConfig(),
     )
 
-    command.logJson = () => {}
-
     await command.run()
 
     expect(receivedFields).to.have.property('title', 'New Title')
@@ -152,14 +140,10 @@ describe('content:update', () => {
 
     const command = new ContentUpdate.default(['999999', '--fields', 'title=Test'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Content not found')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Content not found')
   })
 
   it('exits early when config is not available', async () => {
@@ -208,7 +192,6 @@ describe('content:update', () => {
     })
 
     const command = new ContentUpdate.default(['123456', '--fields', 'title=Test'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 

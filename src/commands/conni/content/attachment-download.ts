@@ -1,10 +1,11 @@
-import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
-import {Args, Command, Flags} from '@oclif/core'
+import {type ApiResult, createProfileManager, formatAsToon} from '@hesed/plugin-lib'
+import {Args, Flags} from '@oclif/core'
 import {action} from '@oclif/core/ux'
 
+import {BaseCommand} from '../../../base-command.js'
 import {clearClients, downloadAttachment} from '../../../conni/conni-client.js'
 
-export default class ContentDownloadAttachment extends Command {
+export default class ContentDownloadAttachment extends BaseCommand {
   static override args = {
     attachmentId: Args.string({description: 'Attachment ID', required: true}),
     outputPath: Args.string({description: 'Output file path', required: false}),
@@ -19,7 +20,7 @@ export default class ContentDownloadAttachment extends Command {
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
 
-  public async run(): Promise<void> {
+  public async run(): Promise<ApiResult> {
     const {args, flags} = await this.parse(ContentDownloadAttachment)
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
@@ -44,8 +45,8 @@ export default class ContentDownloadAttachment extends Command {
 
     if (flags.toon) {
       this.log(formatAsToon(result))
-    } else {
-      this.logJson(result)
     }
+
+    return result
   }
 }

@@ -11,11 +11,9 @@ describe('space:get', () => {
   let mockGetSpace: any
   let mockClearClients: any
   let logOutput: string[]
-  let jsonOutput: any
 
   beforeEach(async () => {
     logOutput = []
-    jsonOutput = null
 
     mockCreateProfileManager = () => ({
       loadAuthConfig: async () => ({
@@ -49,16 +47,12 @@ describe('space:get', () => {
   it('retrieves space with valid space key', async () => {
     const command = new SpaceGet.default(['DEV'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
-    expect(jsonOutput.data).to.have.property('key', 'DEV')
-    expect(jsonOutput.data).to.have.property('name', 'Test Space')
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
+    expect(result.data).to.have.property('key', 'DEV')
+    expect(result.data).to.have.property('name', 'Test Space')
   })
 
   it('formats output as TOON when --toon flag is provided', async () => {
@@ -89,14 +83,10 @@ describe('space:get', () => {
 
     const command = new SpaceGet.default(['INVALID'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Space not found')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Space not found')
   })
 
   it('exits early when config is not available', async () => {
@@ -145,7 +135,6 @@ describe('space:get', () => {
     })
 
     const command = new SpaceGet.default(['DEV'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 

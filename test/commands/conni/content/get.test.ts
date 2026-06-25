@@ -11,11 +11,9 @@ describe('content:get', () => {
   let mockGetContent: any
   let mockClearClients: any
   let logOutput: string[]
-  let jsonOutput: any
 
   beforeEach(async () => {
     logOutput = []
-    jsonOutput = null
 
     mockCreateProfileManager = () => ({
       loadAuthConfig: async () => ({
@@ -48,16 +46,12 @@ describe('content:get', () => {
   it('retrieves content with valid page ID', async () => {
     const command = new ContentGet.default(['123456'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
-    expect(jsonOutput.data).to.have.property('id', '123456')
-    expect(jsonOutput.data).to.have.property('title', 'Test Page')
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
+    expect(result.data).to.have.property('id', '123456')
+    expect(result.data).to.have.property('title', 'Test Page')
   })
 
   it('formats output as TOON when --toon flag is provided', async () => {
@@ -88,14 +82,10 @@ describe('content:get', () => {
 
     const command = new ContentGet.default(['999999'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Content not found')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Content not found')
   })
 
   it('exits early when config is not available', async () => {
@@ -144,7 +134,6 @@ describe('content:get', () => {
     })
 
     const command = new ContentGet.default(['123456'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 

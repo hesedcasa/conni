@@ -11,11 +11,9 @@ describe('content:attachment-download', () => {
   let mockDownloadAttachment: any
   let mockClearClients: any
   let mockAction: any
-  let jsonOutput: any
   let logOutput: string[]
 
   beforeEach(async () => {
-    jsonOutput = null
     logOutput = []
 
     mockCreateProfileManager = () => ({
@@ -55,28 +53,20 @@ describe('content:attachment-download', () => {
   it('downloads attachment successfully without output path', async () => {
     const command = new ContentDownloadAttachment.default(['att12345'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
-    expect(jsonOutput.data.filename).to.equal('document.pdf')
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
+    expect(result.data.filename).to.equal('document.pdf')
   })
 
   it('downloads attachment successfully with output path', async () => {
     const command = new ContentDownloadAttachment.default(['att12345', '/tmp/custom.pdf'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
   })
 
   it('formats output as TOON when --toon flag is provided', async () => {
@@ -108,14 +98,10 @@ describe('content:attachment-download', () => {
 
     const command = new ContentDownloadAttachment.default(['att99999'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Attachment not found')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Attachment not found')
   })
 
   it('exits early when config is not available', async () => {
@@ -166,7 +152,6 @@ describe('content:attachment-download', () => {
     })
 
     const command = new ContentDownloadAttachment.default(['att12345'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 

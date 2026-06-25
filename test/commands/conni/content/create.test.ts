@@ -11,12 +11,10 @@ describe('content:create', () => {
   let mockCreatePage: any
   let mockCreatePageWithMedia: any
   let mockClearClients: any
-  let jsonOutput: any
   let logOutput: string[]
   let errorOutput: null | string
 
   beforeEach(async () => {
-    jsonOutput = null
     logOutput = []
     errorOutput = null
 
@@ -64,15 +62,11 @@ describe('content:create', () => {
       createMockConfig(),
     )
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
-    expect(jsonOutput.data).to.have.property('title', 'New Page')
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
+    expect(result.data).to.have.property('title', 'New Page')
   })
 
   it('parses fields with equals signs in values correctly', async () => {
@@ -96,8 +90,6 @@ describe('content:create', () => {
       ['--fields', 'spaceKey=DEV', '--fields', 'title=Title=With=Equals', '--fields', 'body=Content'],
       createMockConfig(),
     )
-
-    command.logJson = () => {}
 
     await command.run()
 
@@ -199,14 +191,10 @@ describe('content:create', () => {
       createMockConfig(),
     )
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Permission denied')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Permission denied')
   })
 
   it('exits early when config is not available', async () => {
@@ -265,8 +253,6 @@ describe('content:create', () => {
       createMockConfig(),
     )
 
-    command.logJson = () => {}
-
     await command.run()
 
     expect(clearClientsCalled).to.be.true
@@ -305,15 +291,11 @@ describe('content:create', () => {
       createMockConfig(),
     )
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
-
-    await command.run()
+    const result = await command.run()
 
     expect(createPageWithMediaCalled).to.be.true
     expect(receivedFilePaths).to.deep.equal(['./image.png'])
-    expect(jsonOutput.success).to.be.true
+    expect(result.success).to.be.true
   })
 
   it('calls createPage (not createPageWithMedia) when no --attach flag', async () => {
@@ -343,8 +325,6 @@ describe('content:create', () => {
       ['--fields', 'spaceKey=DEV', '--fields', 'title=New Page', '--fields', 'body=Content'],
       createMockConfig(),
     )
-
-    command.logJson = () => {}
 
     await command.run()
 
@@ -384,8 +364,6 @@ describe('content:create', () => {
       ],
       createMockConfig(),
     )
-
-    command.logJson = () => {}
 
     await command.run()
 
