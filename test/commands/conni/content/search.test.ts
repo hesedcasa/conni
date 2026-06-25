@@ -10,11 +10,9 @@ describe('content:search', () => {
   let mockCreateProfileManager: any
   let mockSearchContents: any
   let mockClearClients: any
-  let jsonOutput: any
   let logOutput: string[]
 
   beforeEach(async () => {
-    jsonOutput = null
     logOutput = []
 
     mockCreateProfileManager = () => ({
@@ -50,16 +48,12 @@ describe('content:search', () => {
   it('searches for content with CQL query', async () => {
     const command = new ContentSearch.default(['space=DEV'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
-    expect(jsonOutput.data.results).to.be.an('array')
-    expect(jsonOutput.data.results).to.have.lengthOf(2)
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
+    expect(result.data.results).to.be.an('array')
+    expect(result.data.results).to.have.lengthOf(2)
   })
 
   it('passes CQL query correctly to searchContents', async () => {
@@ -79,7 +73,6 @@ describe('content:search', () => {
     })
 
     const command = new ContentSearch.default(['space=DEV AND title ~ "Error"'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 
@@ -103,7 +96,6 @@ describe('content:search', () => {
     })
 
     const command = new ContentSearch.default(['space=DEV', '--limit', '20'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 
@@ -127,7 +119,6 @@ describe('content:search', () => {
     })
 
     const command = new ContentSearch.default(['space=DEV', '--expand', 'body.storage,version'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 
@@ -163,14 +154,10 @@ describe('content:search', () => {
 
     const command = new ContentSearch.default(['invalid cql'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Invalid CQL query')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Invalid CQL query')
   })
 
   it('exits early when config is not available', async () => {
@@ -219,7 +206,6 @@ describe('content:search', () => {
     })
 
     const command = new ContentSearch.default(['space=DEV'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 

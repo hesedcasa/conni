@@ -1,9 +1,10 @@
-import {createProfileManager, formatAsToon} from '@hesed/plugin-lib'
-import {Args, Command, Flags} from '@oclif/core'
+import {type ApiResult, createProfileManager, formatAsToon} from '@hesed/plugin-lib'
+import {Args, Flags} from '@oclif/core'
 
+import {BaseCommand} from '../../../base-command.js'
 import {addComment, clearClients} from '../../../conni/conni-client.js'
 
-export default class ContentAddComment extends Command {
+export default class ContentAddComment extends BaseCommand {
   /* eslint-disable perfectionist/sort-objects */
   static override args = {
     pageId: Args.string({description: 'Page ID', required: true}),
@@ -20,7 +21,7 @@ export default class ContentAddComment extends Command {
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
 
-  public async run(): Promise<void> {
+  public async run(): Promise<ApiResult> {
     const {args, flags} = await this.parse(ContentAddComment)
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
@@ -33,8 +34,8 @@ export default class ContentAddComment extends Command {
 
     if (flags.toon) {
       this.log(formatAsToon(result))
-    } else {
-      this.logJson(result)
     }
+
+    return result
   }
 }

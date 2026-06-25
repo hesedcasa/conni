@@ -10,11 +10,9 @@ describe('space:list', () => {
   let mockCreateProfileManager: any
   let mockListSpaces: any
   let mockClearClients: any
-  let jsonOutput: any
   let logOutput: string[]
 
   beforeEach(async () => {
-    jsonOutput = null
     logOutput = []
 
     mockCreateProfileManager = () => ({
@@ -47,17 +45,13 @@ describe('space:list', () => {
   it('lists spaces successfully', async () => {
     const command = new SpaceList.default([], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
-    expect(jsonOutput.data).to.be.an('array')
-    expect(jsonOutput.data).to.have.lengthOf(2)
-    expect(jsonOutput.data[0]).to.have.property('key', 'DEV')
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
+    expect(result.data).to.be.an('array')
+    expect(result.data).to.have.lengthOf(2)
+    expect(result.data[0]).to.have.property('key', 'DEV')
   })
 
   it('formats output as TOON when --toon flag is provided', async () => {
@@ -88,14 +82,10 @@ describe('space:list', () => {
 
     const command = new SpaceList.default([], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Authentication failed')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Authentication failed')
   })
 
   it('exits early when config is not available', async () => {
@@ -144,7 +134,6 @@ describe('space:list', () => {
     })
 
     const command = new SpaceList.default([], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 

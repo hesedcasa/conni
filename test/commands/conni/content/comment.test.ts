@@ -10,11 +10,9 @@ describe('content:comment', () => {
   let mockCreateProfileManager: any
   let mockAddComment: any
   let mockClearClients: any
-  let jsonOutput: any
   let logOutput: string[]
 
   beforeEach(async () => {
-    jsonOutput = null
     logOutput = []
 
     mockCreateProfileManager = () => ({
@@ -44,15 +42,11 @@ describe('content:comment', () => {
   it('adds comment successfully', async () => {
     const command = new ContentAddComment.default(['123456', 'Test comment'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
-    expect(jsonOutput.data).to.have.property('id', '10001')
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
+    expect(result.data).to.have.property('id', '10001')
   })
 
   it('formats output as TOON when --toon flag is provided', async () => {
@@ -83,14 +77,10 @@ describe('content:comment', () => {
 
     const command = new ContentAddComment.default(['123456', 'Test comment'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('Permission denied')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('Permission denied')
   })
 
   it('exits early when config is not available', async () => {
@@ -139,7 +129,6 @@ describe('content:comment', () => {
     })
 
     const command = new ContentAddComment.default(['123456', 'Test comment'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 

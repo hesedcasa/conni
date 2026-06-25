@@ -11,11 +11,9 @@ describe('content:attachment', () => {
   let mockAddAttachment: any
   let mockClearClients: any
   let mockAction: any
-  let jsonOutput: any
   let logOutput: string[]
 
   beforeEach(async () => {
-    jsonOutput = null
     logOutput = []
 
     mockCreateProfileManager = () => ({
@@ -54,15 +52,11 @@ describe('content:attachment', () => {
   it('uploads attachment successfully', async () => {
     const command = new ContentAttachment.default(['123456', './document.pdf'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput).to.not.be.null
-    expect(jsonOutput.success).to.be.true
-    expect(jsonOutput.data).to.have.property('id', 'att-123')
+    expect(result).to.not.be.null
+    expect(result.success).to.be.true
+    expect(result.data).to.have.property('id', 'att-123')
   })
 
   it('formats output as TOON when --toon flag is provided', async () => {
@@ -94,14 +88,10 @@ describe('content:attachment', () => {
 
     const command = new ContentAttachment.default(['123456', './nonexistent.pdf'], createMockConfig())
 
-    command.logJson = (output: any) => {
-      jsonOutput = output
-    }
+    const result = await command.run()
 
-    await command.run()
-
-    expect(jsonOutput.success).to.be.false
-    expect(jsonOutput.error).to.include('File upload failed')
+    expect(result.success).to.be.false
+    expect(result.error).to.include('File upload failed')
   })
 
   it('exits early when config is not available', async () => {
@@ -152,7 +142,6 @@ describe('content:attachment', () => {
     })
 
     const command = new ContentAttachment.default(['123456', './document.pdf'], createMockConfig())
-    command.logJson = () => {}
 
     await command.run()
 
