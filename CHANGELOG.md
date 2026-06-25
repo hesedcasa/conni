@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2](https://github.com/hesedcasa/conni/compare/v0.9.1...v0.9.2) (2026-06-25)
+
+
+### ♻️ Chores
+
+* introduce BaseCommand to centralize run() return and JSON ([#86](https://github.com/hesedcasa/conni/issues/86)) ([15a070d](https://github.com/hesedcasa/conni/commit/15a070dbfe946a281ebd757af5cc5d2b8fa73fc1))
+
 ## [0.9.1](https://github.com/hesedcasa/conni/compare/v0.9.0...v0.9.1) (2026-06-15)
 
 
