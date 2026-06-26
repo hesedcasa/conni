@@ -58,10 +58,15 @@
     "dirname": "conni",
     "commands": "./dist/commands",
     "topicSeparator": " ",
-    "topics": {},
-    "update": {
-      "autoupdate": {
-        "debounce": 7
+    "topics": {
+      "conni": {
+        "description": "Commands for managing Confluence workflows and operations"
+      },
+      "conni:content": {
+        "description": "Perform various operations on content"
+      },
+      "conni:space": {
+        "description": "Get space details or list spaces"
       }
     }
   },
