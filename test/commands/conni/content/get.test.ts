@@ -34,7 +34,7 @@ describe('content:get', () => {
 
     mockClearClients = () => {}
 
-    ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
+    ContentGet = await esmock('../../../../src/commands/conni/content/index.js', {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
@@ -72,7 +72,7 @@ describe('content:get', () => {
       success: false,
     })
 
-    ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
+    ContentGet = await esmock('../../../../src/commands/conni/content/index.js', {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
@@ -93,7 +93,7 @@ describe('content:get', () => {
       async loadAuthConfig() {},
     })
 
-    ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
+    ContentGet = await esmock('../../../../src/commands/conni/content/index.js', {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,
@@ -125,7 +125,7 @@ describe('content:get', () => {
       clearClientsCalled = true
     }
 
-    ContentGet = await esmock('../../../../src/commands/conni/content/get.js', {
+    ContentGet = await esmock('../../../../src/commands/conni/content/index.js', {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getContent: mockGetContent,

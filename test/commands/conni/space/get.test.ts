@@ -35,7 +35,7 @@ describe('space:get', () => {
 
     mockClearClients = () => {}
 
-    SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
+    SpaceGet = await esmock('../../../../src/commands/conni/space/index.js', {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
@@ -73,7 +73,7 @@ describe('space:get', () => {
       success: false,
     })
 
-    SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
+    SpaceGet = await esmock('../../../../src/commands/conni/space/index.js', {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
@@ -94,7 +94,7 @@ describe('space:get', () => {
       async loadAuthConfig() {},
     })
 
-    SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
+    SpaceGet = await esmock('../../../../src/commands/conni/space/index.js', {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
@@ -126,7 +126,7 @@ describe('space:get', () => {
       clearClientsCalled = true
     }
 
-    SpaceGet = await esmock('../../../../src/commands/conni/space/get.js', {
+    SpaceGet = await esmock('../../../../src/commands/conni/space/index.js', {
       '../../../../src/conni/conni-client.js': {
         clearClients: mockClearClients,
         getSpace: mockGetSpace,
