@@ -1,7 +1,7 @@
 {
   "name": "@hesed/conni",
   "description": "CLI for Confluence API interaction",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "author": "Hesed",
   "bin": {
     "conni": "./bin/run.js"
