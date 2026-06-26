@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.3](https://github.com/hesedcasa/conni/compare/v0.9.2...v0.9.3) (2026-06-26)
+
+
+### ♻️ Chores
+
+* rename get commands to index and update topic descriptions ([#88](https://github.com/hesedcasa/conni/issues/88)) ([e906996](https://github.com/hesedcasa/conni/commit/e906996e16c36e815c83e9e4a9f9144ce7a845f4))
+
 ## [0.9.2](https://github.com/hesedcasa/conni/compare/v0.9.1...v0.9.2) (2026-06-25)
 
 
