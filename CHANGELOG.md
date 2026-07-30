@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/hesedcasa/conni/compare/v0.9.3...v0.10.0) (2026-07-30)
+
+
+### 🎉 Features
+
+* add HTTP/HTTPS proxy support for Confluence API client ([#99](https://github.com/hesedcasa/conni/issues/99)) ([9c783da](https://github.com/hesedcasa/conni/commit/9c783da56f60b165399f2be40fd57eae2291e82b))
+
 ## [0.9.3](https://github.com/hesedcasa/conni/compare/v0.9.2...v0.9.3) (2026-06-26)
 
 
