@@ -6,6 +6,8 @@ type AdfDocument = ReturnType<typeof markdownToAdf>
 import {type ApiResult, type AuthConfig} from '@hesed/plugin-lib'
 import path from 'node:path'
 
+import {buildProxyRequestConfig} from '../proxy.js'
+
 /**
  * Confluence API Utility
  * Provides core Confluence API operations
@@ -309,6 +311,8 @@ export class ConniApi {
       return this.client
     }
 
+    const baseRequestConfig = buildProxyRequestConfig(this.config.host!)
+
     this.client = new ConfluenceClient({
       authentication: this.config.email
         ? {
@@ -322,6 +326,7 @@ export class ConniApi {
               accessToken: this.config.apiToken,
             },
           },
+      ...(baseRequestConfig && {baseRequestConfig}),
       host: this.config.host!,
     })
 
