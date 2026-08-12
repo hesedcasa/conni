@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1](https://github.com/hesedcasa/conni/compare/v0.10.0...v0.10.1) (2026-08-12)
+
+
+### 🛠️ Fixes
+
+* preserve single newlines as line breaks in markdown to ADF conversion ([#105](https://github.com/hesedcasa/conni/issues/105)) ([89ebff0](https://github.com/hesedcasa/conni/commit/89ebff0f292ebdde3d2334d75a4803cb93f2da37))
+
 ## [0.10.0](https://github.com/hesedcasa/conni/compare/v0.9.3...v0.10.0) (2026-07-30)
 
 
