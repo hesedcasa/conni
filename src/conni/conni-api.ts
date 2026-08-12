@@ -536,7 +536,9 @@ export class ConniApi {
           body: {
             storage: {
               representation,
-              value: isStorage ? body : JSON.stringify(markdownToAdfDocument(body)),
+              // Storage bodies are sent verbatim, so unescape here; the ADF path
+              // gets the same treatment inside markdownToAdfDocument.
+              value: isStorage ? unescapeNewlines(body) : JSON.stringify(markdownToAdfDocument(body)),
             },
           },
         }),
