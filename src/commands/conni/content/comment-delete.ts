@@ -8,6 +8,7 @@ export default class ContentDeleteComment extends BaseCommand {
   static override args = {
     id: Args.string({description: 'Comment ID to delete', required: true}),
   }
+
   static override description = 'Delete comment from Confluence content'
   static override examples = ['<%= config.bin %> <%= command.id %> 1544224770']
   static override flags = {

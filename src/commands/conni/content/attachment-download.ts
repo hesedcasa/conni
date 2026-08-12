@@ -10,11 +10,13 @@ export default class ContentDownloadAttachment extends BaseCommand {
     attachmentId: Args.string({description: 'Attachment ID', required: true}),
     outputPath: Args.string({description: 'Output file path', required: false}),
   }
+
   static override description = 'Download attachment from Confluence content'
   static override examples = [
     '<%= config.bin %> <%= command.id %> att12345',
     '<%= config.bin %> <%= command.id %> att12345 ./document.pdf',
   ]
+
   static override flags = {
     profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
@@ -28,9 +30,7 @@ export default class ContentDownloadAttachment extends BaseCommand {
       this.error(`Missing authentication config.`)
     }
 
-    if (!args.outputPath) {
-      args.outputPath = process.cwd()
-    }
+    args.outputPath ||= process.cwd()
 
     action.start(`Downloading attachment "${args.attachmentId}" to ""`)
 

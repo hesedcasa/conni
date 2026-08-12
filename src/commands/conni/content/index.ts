@@ -8,6 +8,7 @@ export default class ContentGet extends BaseCommand {
   static override args = {
     pageId: Args.string({description: 'Page ID', required: true}),
   }
+
   static override description = 'Get details of a Confluence content'
   static override examples = ['<%= config.bin %> <%= command.id %> 1544060948']
   static override flags = {

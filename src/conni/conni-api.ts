@@ -12,7 +12,7 @@ import {buildProxyRequestConfig} from '../proxy.js'
  */
 export class ConniApi {
   private client?: ConfluenceClient
-  private config: AuthConfig
+  private readonly config: AuthConfig
 
   constructor(config: AuthConfig) {
     this.config = config
@@ -59,7 +59,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -98,7 +98,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -128,7 +128,7 @@ export class ConniApi {
 
       return {data: response, success: true}
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {error: errorMessage, success: false}
     }
   }
@@ -145,10 +145,7 @@ export class ConniApi {
       const {title} = contentPayload
 
       const externalMediaByBasename = new Map<string, Array<Record<string, unknown>>>()
-      this.collectExternalMedia(
-        bodyContent.content as unknown as Array<Record<string, unknown>>,
-        externalMediaByBasename,
-      )
+      this.collectExternalMedia(bodyContent.content, externalMediaByBasename)
 
       const inlinePaths: string[] = []
       const trailingPaths: string[] = []
@@ -167,7 +164,7 @@ export class ConniApi {
         return {error: 'Failed to get page ID from creation response', success: false}
       }
 
-      const uploadResults = await Promise.all(filePaths.map((filePath) => this.addAttachment(pageId, filePath)))
+      const uploadResults = await Promise.all(filePaths.map(async (filePath) => this.addAttachment(pageId, filePath)))
       const firstFailure = uploadResults.find((r) => !r.success)
       if (firstFailure) return firstFailure
 
@@ -183,13 +180,7 @@ export class ConniApi {
         }
       }
 
-      this.patchMediaNodes(
-        bodyContent.content as unknown as Array<Record<string, unknown>>,
-        inlinePaths,
-        trailingPaths,
-        fileInfoByPath,
-        externalMediaByBasename,
-      )
+      this.patchMediaNodes(bodyContent.content, inlinePaths, trailingPaths, fileInfoByPath, externalMediaByBasename)
 
       const updatedPage = await client.content.updateContent({
         body: {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent)}},
@@ -201,7 +192,7 @@ export class ConniApi {
 
       return {data: updatedPage, success: true}
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {error: errorMessage, success: false}
     }
   }
@@ -219,7 +210,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -240,7 +231,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -292,7 +283,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -346,7 +337,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -367,7 +358,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -396,7 +387,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -422,7 +413,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -437,7 +428,7 @@ export class ConniApi {
     try {
       const client = this.getClient()
       await Promise.all(
-        ['content-appearance-published', 'content-appearance-draft'].map((key) =>
+        ['content-appearance-published', 'content-appearance-draft'].map(async (key) =>
           client.contentProperties.createContentProperty({
             id: pageId,
             key,
@@ -448,7 +439,7 @@ export class ConniApi {
 
       return {success: true}
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {error: errorMessage, success: false}
     }
   }
@@ -467,7 +458,7 @@ export class ConniApi {
       }
     } catch (error: unknown) {
       return {
-        error: typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error),
+        error: String(typeof error === 'object' ? (error as {message?: unknown}).message : error),
         success: false,
       }
     }
@@ -511,7 +502,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -541,16 +532,14 @@ export class ConniApi {
       const response = await client.content.updateContent({
         id: pageId,
         type: 'page',
-        ...(body === undefined
-          ? {}
-          : {
-              body: {
-                storage: {
-                  representation,
-                  value: isStorage ? body : JSON.stringify(markdownToAdfDocument(body)),
-                },
-              },
-            }),
+        ...(body !== undefined && {
+          body: {
+            storage: {
+              representation,
+              value: isStorage ? body : JSON.stringify(markdownToAdfDocument(body)),
+            },
+          },
+        }),
         title,
         version: {
           number: currentVersion,
@@ -566,7 +555,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = typeof error === 'object' ? String((error as {message?: unknown}).message) : String(error)
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
       return {
         error: errorMessage,
         success: false,
@@ -616,7 +605,7 @@ export class ConniApi {
     }
   }
 
-  /* eslint-disable max-params */
+  /* eslint-disable-next-line max-params -- media patching needs all five collaborating structures */
   private patchMediaNodes(
     bodyNodes: Array<Record<string, unknown>>,
     inlinePaths: string[],
