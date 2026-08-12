@@ -11,6 +11,7 @@
     "skipLibCheck": true
   },
   "include": ["./src/**/*"],
+  "exclude": ["./test/**/*"],
   "ts-node": {
     "esm": true
   }

@@ -43,6 +43,7 @@ src/
 │   ├── conni-api.ts      # ConniApi class with core API methods
 │   └── conni-client.ts   # Wrapper functions with singleton pattern
 ├── config.ts        # Configuration management (auth config)
+├── markdown.ts      # Markdown to ADF conversion helpers
 └── format.ts        # Output formatting (TOON format)
 ```
 
@@ -70,6 +71,8 @@ interface ApiResult {
 
 **4. Markdown to ADF Conversion:**
 The project uses `marklassian` to convert Markdown to Confluence's Atlassian Document Format (ADF) for comments and descriptions. Commands accept Markdown input which is automatically converted.
+
+Always convert through `markdownToAdfDocument()` from `src/markdown.ts` rather than calling `markdownToAdf()` directly. The helper enables marked's `breaks` option so a single newline becomes a `hardBreak` node instead of collapsing into the surrounding paragraph, and it unescapes literal `\n` sequences (how shell users pass multi-line bodies in one argument). `unescapeNewlines()` is exported separately for the `representation=storage` path, which sends the raw body instead of ADF.
 
 ## Adding a New Command
 
@@ -179,6 +182,7 @@ Authentication config is stored in JSON at `~/.config/conni/conni-config.json` (
 - **confluence.js** v2 - Confluence API client library (`ConfluenceClient` from `confluence.js`)
 - **@oclif/core** - CLI framework
 - **marklassian** - Markdown to ADF conversion
+- **marked** - Markdown lexer used by marklassian; imported directly to enable the `breaks` option
 - **@toon-format/toon** - TOON output format
 - **@inquirer/prompts** - Interactive prompts
 
@@ -187,7 +191,7 @@ Authentication config is stored in JSON at `~/.config/conni/conni-config.json` (
 - All command files use ES modules (`.js` extensions in imports)
 - Pre-commit hook runs format and dead code detection
 - Uses `shx` for cross-platform shell commands
-- Node.js >=18.0.0 required
+- Node.js >=22.0.0 required (ESLint 10 and its unicorn rules need Node 22+)
 - Published as npm package `conni`
 
 ## Commit Message Convention

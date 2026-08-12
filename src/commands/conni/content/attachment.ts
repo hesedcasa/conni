@@ -6,12 +6,13 @@ import {BaseCommand} from '../../../base-command.js'
 import {addAttachment, clearClients} from '../../../conni/conni-client.js'
 
 export default class ContentAttachment extends BaseCommand {
-  /* eslint-disable perfectionist/sort-objects */
+  /* eslint-disable perfectionist/sort-objects -- pageId must be the first arg per CLAUDE.md convention */
   static override args = {
     pageId: Args.string({description: 'Page ID', required: true}),
     file: Args.string({description: 'Path to the file to upload', required: true}),
   }
   /* eslint-enable perfectionist/sort-objects */
+
   static override description = 'Add attachment to Confluence content'
   static override examples = ['<%= config.bin %> <%= command.id %> 123456 ./document.pdf']
   static override flags = {

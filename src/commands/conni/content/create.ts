@@ -16,6 +16,7 @@ export default class ContentCreate extends BaseCommand {
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Page with files" body="Content" --attach ./image.png --attach ./report.pdf',
     '<%= config.bin %> <%= command.id %> --fields spaceKey="DEV" title="Storage page" body=@storage.xml representation=storage --full-width',
   ]
+
   static override flags = {
     attach: Flags.string({
       description: 'Path to a file to upload and embed inline (can be used multiple times)',

@@ -115,6 +115,32 @@ describe('ConniApi', () => {
         // Expected to fail without actual connection
       }
     })
+
+    it('unescapes literal backslash-n in storage bodies, matching page creation', async () => {
+      let sentValue: string | undefined
+      const stubClient = {
+        content: {
+          async getContentById() {
+            return {title: 'Existing', version: {number: 1}}
+          },
+          async updateContent(payload: {body: {storage: {value: string}}}) {
+            sentValue = payload.body.storage.value
+            return {id: '123456'}
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.updateContent('123456', {
+        body: String.raw`<p>line one</p>\n<p>line two</p>`,
+        representation: 'storage',
+      })
+
+      expect(result.success).to.equal(true)
+      expect(sentValue).to.equal('<p>line one</p>\n<p>line two</p>')
+      expect(sentValue).to.not.include(String.raw`\n`)
+    })
   })
 
   describe('addComment', () => {
