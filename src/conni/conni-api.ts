@@ -1,11 +1,9 @@
+import {type ApiResult, type AuthConfig} from '@hesed/plugin-lib'
 import {ConfluenceClient} from 'confluence.js'
 import fs from 'fs-extra'
-import {markdownToAdf} from 'marklassian'
-
-type AdfDocument = ReturnType<typeof markdownToAdf>
-import {type ApiResult, type AuthConfig} from '@hesed/plugin-lib'
 import path from 'node:path'
 
+import {type AdfDocument, markdownToAdfDocument, unescapeNewlines} from '../markdown.js'
 import {buildProxyRequestConfig} from '../proxy.js'
 
 /**
@@ -77,8 +75,7 @@ export class ConniApi {
       const client = this.getClient()
 
       // Convert Markdown body to Confluence ADF
-      // eslint-disable-next-line unicorn/prefer-string-replace-all
-      const bodyContent = markdownToAdf(body.replace(/\\n/g, '\n'))
+      const bodyContent = markdownToAdfDocument(body)
 
       const response = await client.content.createContent({
         body: {
@@ -484,8 +481,7 @@ export class ConniApi {
       const client = this.getClient()
 
       // Convert Markdown body to Confluence ADF
-      // eslint-disable-next-line unicorn/prefer-string-replace-all
-      const bodyContent = markdownToAdf(body.replace(/\\n/g, '\n'))
+      const bodyContent = markdownToAdfDocument(body)
 
       // Get current comment to find its version
       const comment = await client.content.getContentById({
@@ -551,10 +547,7 @@ export class ConniApi {
               body: {
                 storage: {
                   representation,
-                  value: isStorage
-                    ? body
-                    : // eslint-disable-next-line unicorn/prefer-string-replace-all
-                      JSON.stringify(markdownToAdf(body.replace(/\\n/g, '\n'))),
+                  value: isStorage ? body : JSON.stringify(markdownToAdfDocument(body)),
                 },
               },
             }),
@@ -584,9 +577,8 @@ export class ConniApi {
   private buildPageBody(fields: Record<string, unknown>) {
     const representation = (fields.representation as string | undefined) ?? 'atlas_doc_format'
     const isStorage = representation === 'storage'
-    // eslint-disable-next-line unicorn/prefer-string-replace-all
-    const rawBody = (fields.body as string).replace(/\\n/g, '\n')
-    const bodyContent = isStorage ? (rawBody as unknown as AdfDocument) : markdownToAdf(rawBody)
+    const rawBody = unescapeNewlines(fields.body as string)
+    const bodyContent = isStorage ? (rawBody as unknown as AdfDocument) : markdownToAdfDocument(rawBody)
     const spaceKey = fields.spaceKey as string
     const title = fields.title as string
     const parentId = fields.parentId as string | undefined
