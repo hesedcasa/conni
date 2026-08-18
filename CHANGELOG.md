@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/hesedcasa/conni/compare/v0.10.1...v0.11.0) (2026-08-18)
+
+
+### 🎉 Features
+
+* add commands to add, list, and remove content labels ([#111](https://github.com/hesedcasa/conni/issues/111)) ([336cc57](https://github.com/hesedcasa/conni/commit/336cc57cc9e7a12fbde0416f3b4ebbcbb61371c7))
+
 ## [0.10.1](https://github.com/hesedcasa/conni/compare/v0.10.0...v0.10.1) (2026-08-12)
 
 
