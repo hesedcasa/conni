@@ -59,11 +59,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -98,11 +94,28 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
+      return this.toErrorResult(error)
+    }
+  }
+
+  /**
+   * Add labels to a page. Existing labels are left untouched.
+   */
+  async addLabels(pageId: string, labels: string[], prefix = 'global'): Promise<ApiResult> {
+    try {
+      const client = this.getClient()
+
+      const response = await client.contentLabels.addLabelsToContent({
+        body: labels.map((name) => ({name, prefix})),
+        id: pageId,
+      })
+
       return {
-        error: errorMessage,
-        success: false,
+        data: response,
+        success: true,
       }
+    } catch (error: unknown) {
+      return this.toErrorResult(error)
     }
   }
 
@@ -128,8 +141,7 @@ export class ConniApi {
 
       return {data: response, success: true}
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {error: errorMessage, success: false}
+      return this.toErrorResult(error)
     }
   }
 
@@ -192,8 +204,7 @@ export class ConniApi {
 
       return {data: updatedPage, success: true}
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {error: errorMessage, success: false}
+      return this.toErrorResult(error)
     }
   }
 
@@ -210,11 +221,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -231,11 +238,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -283,11 +286,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -337,11 +336,28 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
+      return this.toErrorResult(error)
+    }
+  }
+
+  /**
+   * Get the labels on a page
+   */
+  async getLabels(pageId: string, prefix?: string, limit?: number): Promise<ApiResult> {
+    try {
+      const client = this.getClient()
+      const response = await client.contentLabels.getLabelsForContent({
+        id: pageId,
+        limit,
+        prefix,
+      })
+
       return {
-        error: errorMessage,
-        success: false,
+        data: response,
+        success: true,
       }
+    } catch (error: unknown) {
+      return this.toErrorResult(error)
     }
   }
 
@@ -358,11 +374,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -387,11 +399,29 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
+      return this.toErrorResult(error)
+    }
+  }
+
+  /**
+   * Remove a single label from a page
+   */
+  async removeLabel(pageId: string, label: string): Promise<ApiResult> {
+    try {
+      const client = this.getClient()
+      // The query-parameter variant is used because the path-parameter one
+      // rejects label names containing "/".
+      await client.contentLabels.removeLabelFromContentUsingQueryParameter({
+        id: pageId,
+        name: label,
+      })
+
       return {
-        error: errorMessage,
-        success: false,
+        data: true,
+        success: true,
       }
+    } catch (error: unknown) {
+      return this.toErrorResult(error)
     }
   }
 
@@ -413,11 +443,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -439,8 +465,7 @@ export class ConniApi {
 
       return {success: true}
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {error: errorMessage, success: false}
+      return this.toErrorResult(error)
     }
   }
 
@@ -457,10 +482,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      return {
-        error: String(typeof error === 'object' ? (error as {message?: unknown}).message : error),
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -502,11 +524,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -557,11 +575,14 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
+    }
+  }
+
+  private toErrorResult(error: unknown): ApiResult {
+    return {
+      error: error instanceof Error ? error.message : String(error),
+      success: false,
     }
   }
 

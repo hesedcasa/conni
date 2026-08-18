@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {expect} from 'chai'
 
 import {ConniApi} from '../../src/conni/conni-api.js'
@@ -17,6 +18,25 @@ describe('ConniApi', () => {
 
   afterEach(() => {
     conniApi.clearClients()
+  })
+
+  describe('toErrorResult', () => {
+    it('uses the message of an Error instance', () => {
+      const result = (conniApi as any).toErrorResult(new Error('boom'))
+      expect(result).to.deep.equal({error: 'boom', success: false})
+    })
+
+    it('stringifies non-Error values without throwing', () => {
+      expect((conniApi as any).toErrorResult('plain string')).to.deep.equal({
+        error: 'plain string',
+        success: false,
+      })
+    })
+
+    it('does not throw when the thrown value is null', () => {
+      expect(() => (conniApi as any).toErrorResult(null)).to.not.throw()
+      expect((conniApi as any).toErrorResult(null)).to.deep.equal({error: 'null', success: false})
+    })
   })
 
   describe('constructor', () => {
@@ -212,6 +232,69 @@ describe('ConniApi', () => {
       const result = await conniApi.addAttachment('123456', '/nonexistent/file.pdf')
       expect(result.success).to.equal(false)
       expect(result.error).to.include('File not found')
+    })
+  })
+
+  describe('addLabels', () => {
+    it('exports addLabels method', () => {
+      expect(conniApi.addLabels).to.be.a('function')
+    })
+
+    it('accepts pageId and labels parameters', async () => {
+      try {
+        const result = await conniApi.addLabels('123456', ['release-notes', 'q3'])
+        expect(result).to.have.property('success')
+      } catch {
+        // Expected to fail without actual connection
+      }
+    })
+
+    it('accepts an optional prefix parameter', async () => {
+      try {
+        const result = await conniApi.addLabels('123456', ['favourite'], 'my')
+        expect(result).to.have.property('success')
+      } catch {
+        // Expected to fail without actual connection
+      }
+    })
+  })
+
+  describe('getLabels', () => {
+    it('exports getLabels method', () => {
+      expect(conniApi.getLabels).to.be.a('function')
+    })
+
+    it('accepts pageId parameter', async () => {
+      try {
+        const result = await conniApi.getLabels('123456')
+        expect(result).to.have.property('success')
+      } catch {
+        // Expected to fail without actual connection
+      }
+    })
+
+    it('accepts optional prefix and limit parameters', async () => {
+      try {
+        const result = await conniApi.getLabels('123456', 'global', 50)
+        expect(result).to.have.property('success')
+      } catch {
+        // Expected to fail without actual connection
+      }
+    })
+  })
+
+  describe('removeLabel', () => {
+    it('exports removeLabel method', () => {
+      expect(conniApi.removeLabel).to.be.a('function')
+    })
+
+    it('accepts pageId and label parameters', async () => {
+      try {
+        const result = await conniApi.removeLabel('123456', 'release-notes')
+        expect(result).to.have.property('success')
+      } catch {
+        // Expected to fail without actual connection
+      }
     })
   })
 

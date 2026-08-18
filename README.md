@@ -51,6 +51,9 @@ USAGE
 * [`conni conni content comment-update ID BODY`](#conni-conni-content-comment-update-id-body)
 * [`conni conni content create`](#conni-conni-content-create)
 * [`conni conni content delete PAGEID`](#conni-conni-content-delete-pageid)
+* [`conni conni content label PAGEID LABELS`](#conni-conni-content-label-pageid-labels)
+* [`conni conni content label-delete PAGEID LABEL`](#conni-conni-content-label-delete-pageid-label)
+* [`conni conni content label-list PAGEID`](#conni-conni-content-label-list-pageid)
 * [`conni conni content search CQL`](#conni-conni-content-search-cql)
 * [`conni conni content update PAGEID`](#conni-conni-content-update-pageid)
 * [`conni conni space SPACEKEY`](#conni-conni-space-spacekey)
@@ -445,6 +448,93 @@ EXAMPLES
 ```
 
 _See code: [src/commands/conni/content/delete.ts](https://github.com/hesedcasa/conni/blob/v0.10.1/src/commands/conni/content/delete.ts)_
+
+## `conni conni content label PAGEID LABELS`
+
+Add labels to Confluence content
+
+```
+USAGE
+  $ conni conni content label PAGEID LABELS [--prefix global|my|team] [-p <value>] [--toon]
+
+ARGUMENTS
+  PAGEID  Page ID
+  LABELS  Label name, or comma-separated list of label names
+
+FLAGS
+  -p, --profile=<value>  Authentication profile name
+      --prefix=<option>  [default: global] Label prefix
+                         <options: global|my|team>
+      --toon             Format output as toon
+
+DESCRIPTION
+  Add labels to Confluence content
+
+EXAMPLES
+  $ conni conni content label 123456 release-notes
+
+  $ conni conni content label 123456 "release-notes,q3,draft"
+
+  $ conni conni content label 123456 favourite --prefix my
+```
+
+_See code: [src/commands/conni/content/label.ts](https://github.com/hesedcasa/conni/blob/v0.10.1/src/commands/conni/content/label.ts)_
+
+## `conni conni content label-delete PAGEID LABEL`
+
+Remove a label from Confluence content
+
+```
+USAGE
+  $ conni conni content label-delete PAGEID LABEL [-p <value>] [--toon]
+
+ARGUMENTS
+  PAGEID  Page ID
+  LABEL   Name of the label to remove, without its prefix
+
+FLAGS
+  -p, --profile=<value>  Authentication profile name
+      --toon             Format output as toon
+
+DESCRIPTION
+  Remove a label from Confluence content
+
+EXAMPLES
+  $ conni conni content label-delete 123456 release-notes
+
+  $ conni conni content label-delete 123456 favourite
+```
+
+_See code: [src/commands/conni/content/label-delete.ts](https://github.com/hesedcasa/conni/blob/v0.10.1/src/commands/conni/content/label-delete.ts)_
+
+## `conni conni content label-list PAGEID`
+
+List labels on Confluence content
+
+```
+USAGE
+  $ conni conni content label-list PAGEID [--limit <value>] [--prefix global|my|team] [-p <value>] [--toon]
+
+ARGUMENTS
+  PAGEID  Page ID
+
+FLAGS
+  -p, --profile=<value>  Authentication profile name
+      --limit=<value>    Maximum number of labels to return
+      --prefix=<option>  Only return labels with this prefix
+                         <options: global|my|team>
+      --toon             Format output as toon
+
+DESCRIPTION
+  List labels on Confluence content
+
+EXAMPLES
+  $ conni conni content label-list 123456
+
+  $ conni conni content label-list 123456 --prefix global --limit 50
+```
+
+_See code: [src/commands/conni/content/label-list.ts](https://github.com/hesedcasa/conni/blob/v0.10.1/src/commands/conni/content/label-list.ts)_
 
 ## `conni conni content search CQL`
 

@@ -92,3 +92,28 @@ export async function downloadAttachment(
   const conni = await getClient(config)
   return conni.downloadAttachment(attachmentId, outputPath)
 }
+
+export async function addLabels(
+  config: AuthConfig,
+  pageId: string,
+  labels: string[],
+  prefix?: string,
+): Promise<ApiResult> {
+  const conni = await getClient(config)
+  return conni.addLabels(pageId, labels, prefix)
+}
+
+export async function getLabels(
+  config: AuthConfig,
+  pageId: string,
+  prefix?: string,
+  limit?: number,
+): Promise<ApiResult> {
+  const conni = await getClient(config)
+  return conni.getLabels(pageId, prefix, limit)
+}
+
+export async function removeLabel(config: AuthConfig, pageId: string, label: string): Promise<ApiResult> {
+  const conni = await getClient(config)
+  return conni.removeLabel(pageId, label)
+}

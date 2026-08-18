@@ -10,8 +10,8 @@ export default class ContentUpdateComment extends BaseCommand {
     id: Args.string({description: 'Comment ID to update', required: true}),
     body: Args.string({description: 'Comment in Markdown format', required: true}),
   }
-  /* eslint-enable perfectionist/sort-objects */
 
+  /* eslint-enable perfectionist/sort-objects */
   static override description = 'Update a comment in Confluence content'
   static override examples = [
     '<%= config.bin %> <%= command.id %> 1544224770 "\n# Header\n## Sub-header\n- Item 1\n- Item 2\n```bash\nls -a\n```"',
