@@ -8,7 +8,6 @@ export default class ContentDelete extends BaseCommand {
   static override args = {
     pageId: Args.string({description: 'Page ID to delete', required: true}),
   }
-
   static override description = 'Delete a Confluence page'
   static override examples = ['<%= config.bin %> <%= command.id %> 1543634992']
   static override flags = {

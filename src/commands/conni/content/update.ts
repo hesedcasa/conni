@@ -9,7 +9,6 @@ export default class ContentUpdate extends BaseCommand {
   static override args = {
     pageId: Args.string({description: 'Page ID', required: true}),
   }
-
   static override description = 'Update an existing Confluence content'
   static override examples = [
     "<%= config.bin %> <%= command.id %> 1076199489 --fields title='New summary' body='New description'",
@@ -17,7 +16,6 @@ export default class ContentUpdate extends BaseCommand {
     '<%= config.bin %> <%= command.id %> 1076199489 --fields body="$(cat content.md)"',
     '<%= config.bin %> <%= command.id %> 1076199489 --fields body=@storage.xml representation=storage --full-width',
   ]
-
   static override flags = {
     fields: Flags.string({
       description:

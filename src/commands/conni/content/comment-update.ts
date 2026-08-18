@@ -11,13 +11,11 @@ export default class ContentUpdateComment extends BaseCommand {
     body: Args.string({description: 'Comment in Markdown format', required: true}),
   }
   /* eslint-enable perfectionist/sort-objects */
-
   static override description = 'Update a comment in Confluence content'
   static override examples = [
     '<%= config.bin %> <%= command.id %> 1544224770 "\n# Header\n## Sub-header\n- Item 1\n- Item 2\n```bash\nls -a\n```"',
     '<%= config.bin %> <%= command.id %> 1544224770 "$(cat content.md)"',
   ]
-
   static override flags = {
     profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),

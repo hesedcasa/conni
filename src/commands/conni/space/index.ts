@@ -8,7 +8,6 @@ export default class SpaceGet extends BaseCommand {
   static override args = {
     spaceKey: Args.string({description: 'Space key', required: true}),
   }
-
   static override description = 'Get details of a Confluence space'
   static override examples = ['<%= config.bin %> <%= command.id %> DEV']
   static override flags = {

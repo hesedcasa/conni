@@ -107,6 +107,31 @@ export class ConniApi {
   }
 
   /**
+   * Add labels to a page. Existing labels are left untouched.
+   */
+  async addLabels(pageId: string, labels: string[], prefix = 'global'): Promise<ApiResult> {
+    try {
+      const client = this.getClient()
+
+      const response = await client.contentLabels.addLabelsToContent({
+        body: labels.map((name) => ({name, prefix})),
+        id: pageId,
+      })
+
+      return {
+        data: response,
+        success: true,
+      }
+    } catch (error: unknown) {
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
+      return {
+        error: errorMessage,
+        success: false,
+      }
+    }
+  }
+
+  /**
    * Clear client (for cleanup)
    */
   clearClients(): void {
@@ -346,6 +371,31 @@ export class ConniApi {
   }
 
   /**
+   * Get the labels on a page
+   */
+  async getLabels(pageId: string, prefix?: string, limit?: number): Promise<ApiResult> {
+    try {
+      const client = this.getClient()
+      const response = await client.contentLabels.getLabelsForContent({
+        id: pageId,
+        limit,
+        prefix,
+      })
+
+      return {
+        data: response,
+        success: true,
+      }
+    } catch (error: unknown) {
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
+      return {
+        error: errorMessage,
+        success: false,
+      }
+    }
+  }
+
+  /**
    * Get space details
    */
   async getSpace(spaceKey: string): Promise<ApiResult> {
@@ -384,6 +434,32 @@ export class ConniApi {
 
       return {
         data: simplifiedSpaces,
+        success: true,
+      }
+    } catch (error: unknown) {
+      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
+      return {
+        error: errorMessage,
+        success: false,
+      }
+    }
+  }
+
+  /**
+   * Remove a single label from a page
+   */
+  async removeLabel(pageId: string, label: string): Promise<ApiResult> {
+    try {
+      const client = this.getClient()
+      // The query-parameter variant is used because the path-parameter one
+      // rejects label names containing "/".
+      await client.contentLabels.removeLabelFromContentUsingQueryParameter({
+        id: pageId,
+        name: label,
+      })
+
+      return {
+        data: true,
         success: true,
       }
     } catch (error: unknown) {

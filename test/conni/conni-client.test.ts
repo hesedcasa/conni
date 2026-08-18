@@ -18,14 +18,17 @@ describe('conni-client', () => {
     mockConniApiInstance = {
       addAttachment: async () => ({data: {id: 'att-123'}, success: true}),
       addComment: async () => ({data: {id: '10001'}, success: true}),
+      addLabels: async () => ({data: {results: [], size: 0}, success: true}),
       clearClients() {},
       createPage: async () => ({data: {id: '123456', title: 'Test Page'}, success: true}),
       deleteComment: async () => ({data: {}, success: true}),
       deleteContent: async () => ({data: {}, success: true}),
       downloadAttachment: async () => ({data: {}, success: true}),
       getContent: async () => ({data: {id: '123456', title: 'Test Page'}, success: true}),
+      getLabels: async () => ({data: {results: [], size: 0}, success: true}),
       getSpace: async () => ({data: {id: '10000', key: 'DEV', name: 'Development'}, success: true}),
       listSpaces: async () => ({data: [{id: '10000', key: 'DEV', name: 'Development', type: 'global'}], success: true}),
+      removeLabel: async () => ({data: true, success: true}),
       searchContents: async () => ({data: {results: [], size: 0}, success: true}),
       testConnection: async () => ({data: {currentUser: {}, serverInfo: {}}, success: true}),
       updateComment: async () => ({data: {id: '10001'}, success: true}),
@@ -374,6 +377,72 @@ describe('conni-client', () => {
 
       expect(result.success).to.be.false
       expect(result.error).to.include('Connection refused')
+    })
+  })
+
+  describe('addLabels', () => {
+    it('returns successful result when labels are added', async () => {
+      mockConniApiInstance.addLabels = async () => ({
+        data: {results: [{id: '1', label: 'release-notes', name: 'release-notes', prefix: 'global'}], size: 1},
+        success: true,
+      })
+
+      const result = await conniClient.addLabels(mockConfig, '123456', ['release-notes'], 'global')
+
+      expect(result.success).to.be.true
+      expect(result.data.size).to.equal(1)
+    })
+
+    it('handles errors', async () => {
+      mockConniApiInstance.addLabels = async () => ({error: 'Label creation failed', success: false})
+
+      const result = await conniClient.addLabels(mockConfig, '123456', ['release-notes'])
+
+      expect(result.success).to.be.false
+      expect(result.error).to.include('Label creation failed')
+    })
+  })
+
+  describe('getLabels', () => {
+    it('returns successful result with labels', async () => {
+      mockConniApiInstance.getLabels = async () => ({
+        data: {results: [{id: '1', label: 'q3', name: 'q3', prefix: 'global'}], size: 1},
+        success: true,
+      })
+
+      const result = await conniClient.getLabels(mockConfig, '123456')
+
+      expect(result.success).to.be.true
+      expect(result.data.results).to.have.lengthOf(1)
+    })
+
+    it('handles errors', async () => {
+      mockConniApiInstance.getLabels = async () => ({error: 'Page not found', success: false})
+
+      const result = await conniClient.getLabels(mockConfig, '999999', 'global', 50)
+
+      expect(result.success).to.be.false
+      expect(result.error).to.include('Page not found')
+    })
+  })
+
+  describe('removeLabel', () => {
+    it('returns successful result when a label is removed', async () => {
+      mockConniApiInstance.removeLabel = async () => ({data: true, success: true})
+
+      const result = await conniClient.removeLabel(mockConfig, '123456', 'release-notes')
+
+      expect(result.success).to.be.true
+      expect(result.data).to.be.true
+    })
+
+    it('handles errors', async () => {
+      mockConniApiInstance.removeLabel = async () => ({error: 'Label not found', success: false})
+
+      const result = await conniClient.removeLabel(mockConfig, '123456', 'missing')
+
+      expect(result.success).to.be.false
+      expect(result.error).to.include('Label not found')
     })
   })
 
