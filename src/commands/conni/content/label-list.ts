@@ -8,14 +8,20 @@ export default class ContentListLabels extends BaseCommand {
   static override args = {
     pageId: Args.string({description: 'Page ID', required: true}),
   }
+
   static override description = 'List labels on Confluence content'
   static override examples = [
     '<%= config.bin %> <%= command.id %> 123456',
     '<%= config.bin %> <%= command.id %> 123456 --prefix global --limit 50',
   ]
+
   static override flags = {
     limit: Flags.integer({description: 'Maximum number of labels to return', required: false}),
-    prefix: Flags.string({description: 'Only return labels with this prefix (global, my, team)', required: false}),
+    prefix: Flags.string({
+      description: 'Only return labels with this prefix',
+      options: ['global', 'my', 'team'],
+      required: false,
+    }),
     profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }

@@ -11,6 +11,7 @@ export default class ContentAttachment extends BaseCommand {
     pageId: Args.string({description: 'Page ID', required: true}),
     file: Args.string({description: 'Path to the file to upload', required: true}),
   }
+
   /* eslint-enable perfectionist/sort-objects */
   static override description = 'Add attachment to Confluence content'
   static override examples = ['<%= config.bin %> <%= command.id %> 123456 ./document.pdf']

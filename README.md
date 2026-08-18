@@ -455,7 +455,7 @@ Add labels to Confluence content
 
 ```
 USAGE
-  $ conni conni content label PAGEID LABELS [--prefix <value>] [-p <value>] [--toon]
+  $ conni conni content label PAGEID LABELS [--prefix global|my|team] [-p <value>] [--toon]
 
 ARGUMENTS
   PAGEID  Page ID
@@ -463,7 +463,8 @@ ARGUMENTS
 
 FLAGS
   -p, --profile=<value>  Authentication profile name
-      --prefix=<value>   [default: global] Label prefix (global, my, team)
+      --prefix=<option>  [default: global] Label prefix
+                         <options: global|my|team>
       --toon             Format output as toon
 
 DESCRIPTION
@@ -512,7 +513,7 @@ List labels on Confluence content
 
 ```
 USAGE
-  $ conni conni content label-list PAGEID [--limit <value>] [--prefix <value>] [-p <value>] [--toon]
+  $ conni conni content label-list PAGEID [--limit <value>] [--prefix global|my|team] [-p <value>] [--toon]
 
 ARGUMENTS
   PAGEID  Page ID
@@ -520,7 +521,8 @@ ARGUMENTS
 FLAGS
   -p, --profile=<value>  Authentication profile name
       --limit=<value>    Maximum number of labels to return
-      --prefix=<value>   Only return labels with this prefix (global, my, team)
+      --prefix=<option>  Only return labels with this prefix
+                         <options: global|my|team>
       --toon             Format output as toon
 
 DESCRIPTION

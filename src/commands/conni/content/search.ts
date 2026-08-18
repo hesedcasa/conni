@@ -8,11 +8,13 @@ export default class ContentSearch extends BaseCommand {
   static override args = {
     cql: Args.string({description: 'CQL expression', required: true}),
   }
+
   static override description = 'Search for Confluence contents using CQL'
   static override examples = [
     '<%= config.bin %> <%= command.id %> \'space=DEV AND title ~ "Implement email OTP login" AND creator=currentUser()\'',
     "<%= config.bin %> <%= command.id %> 'created > startOfMonth()' --limit=5 --expand=body,version",
   ]
+
   static override flags = {
     expand: Flags.string({description: 'Properties of the content to expand', required: false}),
     limit: Flags.integer({description: 'Maximum number of contents per page', required: false}),

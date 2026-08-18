@@ -59,11 +59,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -98,11 +94,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -123,11 +115,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -153,8 +141,7 @@ export class ConniApi {
 
       return {data: response, success: true}
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {error: errorMessage, success: false}
+      return this.toErrorResult(error)
     }
   }
 
@@ -217,8 +204,7 @@ export class ConniApi {
 
       return {data: updatedPage, success: true}
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {error: errorMessage, success: false}
+      return this.toErrorResult(error)
     }
   }
 
@@ -235,11 +221,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -256,11 +238,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -308,11 +286,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -362,11 +336,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -387,11 +357,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -408,11 +374,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -437,11 +399,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -463,11 +421,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -489,11 +443,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -515,8 +465,7 @@ export class ConniApi {
 
       return {success: true}
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {error: errorMessage, success: false}
+      return this.toErrorResult(error)
     }
   }
 
@@ -533,10 +482,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      return {
-        error: String(typeof error === 'object' ? (error as {message?: unknown}).message : error),
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -578,11 +524,7 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
     }
   }
 
@@ -633,11 +575,14 @@ export class ConniApi {
         success: true,
       }
     } catch (error: unknown) {
-      const errorMessage = String(typeof error === 'object' ? (error as {message?: unknown}).message : error)
-      return {
-        error: errorMessage,
-        success: false,
-      }
+      return this.toErrorResult(error)
+    }
+  }
+
+  private toErrorResult(error: unknown): ApiResult {
+    return {
+      error: error instanceof Error ? error.message : String(error),
+      success: false,
     }
   }
 

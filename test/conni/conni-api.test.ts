@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {expect} from 'chai'
 
 import {ConniApi} from '../../src/conni/conni-api.js'
@@ -17,6 +18,25 @@ describe('ConniApi', () => {
 
   afterEach(() => {
     conniApi.clearClients()
+  })
+
+  describe('toErrorResult', () => {
+    it('uses the message of an Error instance', () => {
+      const result = (conniApi as any).toErrorResult(new Error('boom'))
+      expect(result).to.deep.equal({error: 'boom', success: false})
+    })
+
+    it('stringifies non-Error values without throwing', () => {
+      expect((conniApi as any).toErrorResult('plain string')).to.deep.equal({
+        error: 'plain string',
+        success: false,
+      })
+    })
+
+    it('does not throw when the thrown value is null', () => {
+      expect(() => (conniApi as any).toErrorResult(null)).to.not.throw()
+      expect((conniApi as any).toErrorResult(null)).to.deep.equal({error: 'null', success: false})
+    })
   })
 
   describe('constructor', () => {

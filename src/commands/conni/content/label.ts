@@ -10,6 +10,7 @@ export default class ContentLabel extends BaseCommand {
     pageId: Args.string({description: 'Page ID', required: true}),
     labels: Args.string({description: 'Label name, or comma-separated list of label names', required: true}),
   }
+
   /* eslint-enable perfectionist/sort-objects */
   static override description = 'Add labels to Confluence content'
   static override examples = [
@@ -17,8 +18,14 @@ export default class ContentLabel extends BaseCommand {
     '<%= config.bin %> <%= command.id %> 123456 "release-notes,q3,draft"',
     '<%= config.bin %> <%= command.id %> 123456 favourite --prefix my',
   ]
+
   static override flags = {
-    prefix: Flags.string({default: 'global', description: 'Label prefix (global, my, team)', required: false}),
+    prefix: Flags.string({
+      default: 'global',
+      description: 'Label prefix',
+      options: ['global', 'my', 'team'],
+      required: false,
+    }),
     profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
@@ -33,7 +40,7 @@ export default class ContentLabel extends BaseCommand {
 
     const labels = (args.labels as string)
       .split(',')
-      .map((label: string) => label.trim())
+      .map((label) => label.trim())
       .filter(Boolean)
 
     if (labels.length === 0) {

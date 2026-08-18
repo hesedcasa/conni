@@ -10,12 +10,14 @@ export default class ContentDeleteLabel extends BaseCommand {
     pageId: Args.string({description: 'Page ID', required: true}),
     label: Args.string({description: 'Name of the label to remove, without its prefix', required: true}),
   }
+
   /* eslint-enable perfectionist/sort-objects */
   static override description = 'Remove a label from Confluence content'
   static override examples = [
     '<%= config.bin %> <%= command.id %> 123456 release-notes',
     '<%= config.bin %> <%= command.id %> 123456 favourite',
   ]
+
   static override flags = {
     profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
