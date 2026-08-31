@@ -13,7 +13,7 @@
     "@oclif/core": "^4",
     "confluence.js": "^2.1.0",
     "fs-extra": "^11.3.3",
-    "https-proxy-agent": "^7.0.6",
+    "https-proxy-agent": "^9.1.0",
     "marked": "^16.0.0",
     "marklassian": "^1.1.0",
     "proxy-from-env": "^1.1.0"
