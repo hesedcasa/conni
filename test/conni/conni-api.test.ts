@@ -37,6 +37,94 @@ describe('ConniApi', () => {
       expect(() => (conniApi as any).toErrorResult(null)).to.not.throw()
       expect((conniApi as any).toErrorResult(null)).to.deep.equal({error: 'null', success: false})
     })
+
+    // confluence.js rejects with a plain object, not an Error, so `String(error)`
+    // used to reduce every API failure to the useless string '[object Object]'.
+    it('prefers the translated message of a confluence.js rejection', () => {
+      const rejection = {
+        data: {errors: [{message: {args: [], translation: 'No content found with id : 999999999'}}]},
+        message:
+          'com.atlassian.confluence.api.service.exceptions.api.NotFoundException: No content found with id : 999999999',
+        statusCode: 404,
+      }
+
+      expect((conniApi as any).toErrorResult(rejection)).to.deep.equal({
+        error: 'No content found with id : 999999999',
+        success: false,
+      })
+    })
+
+    it('joins multiple translated messages', () => {
+      const rejection = {
+        data: {errors: [{message: {translation: 'first problem'}}, {message: {translation: 'second problem'}}]},
+        message: 'com.example.SomeException: wrapped',
+        statusCode: 400,
+      }
+
+      expect((conniApi as any).toErrorResult(rejection).error).to.equal('first problem; second problem')
+    })
+
+    it('strips the java exception prefix when there is no translation', () => {
+      const rejection = {
+        message:
+          'org.springframework.web.server.ResponseStatusException: 404 NOT_FOUND "No space found with key : BOGUSKEY"',
+        statusCode: 404,
+      }
+
+      expect((conniApi as any).toErrorResult(rejection).error).to.equal(
+        '404 NOT_FOUND "No space found with key : BOGUSKEY"',
+      )
+    })
+
+    it('falls back to the message when the errors array is empty', () => {
+      const rejection = {
+        data: {errors: []},
+        message: 'com.atlassian.confluence.api.service.exceptions.api.BadRequestException: Could not parse cql : ',
+        statusCode: 400,
+      }
+
+      expect((conniApi as any).toErrorResult(rejection).error).to.equal('Could not parse cql :')
+    })
+
+    it('never reduces an object to [object Object]', () => {
+      expect((conniApi as any).toErrorResult({statusCode: 500}).error).to.equal('{"statusCode":500}')
+    })
+
+    it('does not strip a plain message that merely contains a colon', () => {
+      expect((conniApi as any).toErrorResult({message: 'Note: something happened'}).error).to.equal(
+        'Note: something happened',
+      )
+    })
+
+    // Confluence answers a bad attachment id with the literal message
+    // 'NotFoundException: null', which strips down to a useless 'null'.
+    it('falls back to the status code when the message carries no information', () => {
+      const rejection = {
+        data: {errors: []},
+        message: 'com.atlassian.confluence.api.service.exceptions.api.NotFoundException: null',
+        statusCode: 404,
+      }
+
+      expect((conniApi as any).toErrorResult(rejection).error).to.equal('Confluence request failed with status 404')
+    })
+
+    it('falls back to the status code when the message strips to nothing', () => {
+      const rejection = {message: 'com.example.SomeException: ', statusCode: 500}
+
+      expect((conniApi as any).toErrorResult(rejection).error).to.equal('Confluence request failed with status 500')
+    })
+
+    it('trims surrounding whitespace from a message', () => {
+      expect((conniApi as any).toErrorResult({message: '  spaced out  '}).error).to.equal('spaced out')
+    })
+
+    it('survives a circular rejection object', () => {
+      const circular: Record<string, unknown> = {statusCode: 500}
+      circular.self = circular
+
+      expect(() => (conniApi as any).toErrorResult(circular)).to.not.throw()
+      expect((conniApi as any).toErrorResult(circular).success).to.be.false
+    })
   })
 
   describe('constructor', () => {
