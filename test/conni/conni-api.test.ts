@@ -146,7 +146,19 @@ describe('ConniApi', () => {
       circular.self = circular
 
       expect(() => (conniApi as any).toErrorResult(circular)).to.not.throw()
-      expect((conniApi as any).toErrorResult(circular).success).to.be.false
+      expect((conniApi as any).toErrorResult(circular)).to.deep.equal({
+        error: '<ref *1> { statusCode: 500, self: [Circular *1] }',
+        success: false,
+      })
+    })
+
+    it('uses a safe formatter when JSON.stringify returns undefined', () => {
+      const rejection = {toJSON: () => undefined}
+
+      expect((conniApi as any).toErrorResult(rejection)).to.deep.equal({
+        error: '{ toJSON: [Function: toJSON] }',
+        success: false,
+      })
     })
   })
 

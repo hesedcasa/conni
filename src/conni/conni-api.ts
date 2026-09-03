@@ -2,6 +2,7 @@ import {type ApiResult, type AuthConfig} from '@hesed/plugin-lib'
 import {ConfluenceClient} from 'confluence.js'
 import fs from 'fs-extra'
 import path from 'node:path'
+import {inspect} from 'node:util'
 
 import {type AdfDocument, markdownToAdfDocument, unescapeNewlines} from '../markdown.js'
 import {buildProxyRequestConfig} from '../proxy.js'
@@ -59,10 +60,15 @@ function toErrorMessage(error: unknown): string {
     }
 
     try {
-      return JSON.stringify(error)
+      const serialized = JSON.stringify(error)
+      if (serialized !== undefined) {
+        return serialized
+      }
     } catch {
-      return String(error)
+      // Fall through to the circular-safe formatter below.
     }
+
+    return inspect(error)
   }
 
   return String(error)
