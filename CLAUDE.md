@@ -168,6 +168,13 @@ static override args = {
 
 Auth lives in `conni-config.json` under oclif's platform-dependent config dir (`~/.config/conni/` on Linux). The file is profile-keyed and read/written entirely by `@hesed/plugin-lib` — `auth add` requires `-p <profile>`, `auth profile` selects the default, and every Confluence command accepts `-p` to override. A profile holds `host`, `email`, and `apiToken`; omitting `email` switches `getClient()` to OAuth2 bearer auth.
 
+**Nothing in this repo loads `.env`** — there is no dotenv dependency, so the variables must already be in the process environment. Export them before running any command that talks to Confluence:
+
+```bash
+set -a; . ./.env; set +a
+./bin/dev.js conni auth test
+```
+
 ## Important Notes
 
 - ES modules throughout — imports of local files must carry the `.js` extension.

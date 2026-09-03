@@ -2,9 +2,77 @@ import {type ApiResult, type AuthConfig} from '@hesed/plugin-lib'
 import {ConfluenceClient} from 'confluence.js'
 import fs from 'fs-extra'
 import path from 'node:path'
+import {inspect} from 'node:util'
 
 import {type AdfDocument, markdownToAdfDocument, unescapeNewlines} from '../markdown.js'
 import {buildProxyRequestConfig} from '../proxy.js'
+
+/**
+ * Leading java/spring exception class name in a Confluence error message, e.g.
+ * `com.atlassian.confluence.api.service.exceptions.api.NotFoundException: `. The
+ * package qualifier is optional, so a bare `NotFoundException: ` strips too. The
+ * class name still has to end in Exception or Error, which keeps an ordinary
+ * message like `Note: something happened` intact.
+ */
+const JAVA_EXCEPTION_PREFIX = /^(?:[\w$]+\.)*[\w$]*(?:Exception|Error):\s*/
+
+/**
+ * Reduce a thrown value to a human-readable message.
+ *
+ * confluence.js rejects with a plain object (`{statusCode, data?, message}`) rather
+ * than an Error, so a bare `String(error)` yields '[object Object]' and hides the
+ * real cause. Prefer Confluence's own translated messages, fall back to the raw
+ * message with its java exception prefix stripped, and never return
+ * '[object Object]'.
+ */
+function toErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+
+  if (typeof error === 'object' && error !== null) {
+    const {data, message, statusCode} = error as {
+      data?: {errors?: Array<{message?: {translation?: string}}>}
+      message?: unknown
+      statusCode?: unknown
+    }
+
+    const translations = (data?.errors ?? [])
+      .map((entry) => entry?.message?.translation)
+      .filter((translation): translation is string => Boolean(translation))
+
+    if (translations.length > 0) {
+      return translations.join('; ')
+    }
+
+    if (typeof message === 'string') {
+      const stripped = message.replace(JAVA_EXCEPTION_PREFIX, '').trim()
+
+      // Confluence sometimes reports nothing useful, e.g. a bad attachment id comes
+      // back as 'NotFoundException: null'. The status code beats echoing 'null'.
+      if (stripped !== '' && stripped !== 'null') {
+        return stripped
+      }
+
+      if (statusCode !== undefined) {
+        return `Confluence request failed with status ${String(statusCode)}`
+      }
+    }
+
+    try {
+      const serialized = JSON.stringify(error)
+      if (serialized !== undefined) {
+        return serialized
+      }
+    } catch {
+      // Fall through to the circular-safe formatter below.
+    }
+
+    return inspect(error)
+  }
+
+  return String(error)
+}
 
 /**
  * Confluence API Utility
@@ -581,7 +649,7 @@ export class ConniApi {
 
   private toErrorResult(error: unknown): ApiResult {
     return {
-      error: error instanceof Error ? error.message : String(error),
+      error: toErrorMessage(error),
       success: false,
     }
   }

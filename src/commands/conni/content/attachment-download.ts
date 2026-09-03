@@ -30,17 +30,18 @@ export default class ContentDownloadAttachment extends BaseCommand {
       this.error(`Missing authentication config.`)
     }
 
-    args.outputPath ||= process.cwd()
-
-    action.start(`Downloading attachment "${args.attachmentId}" to ""`)
+    // Leave outputPath undefined when the user omits it: the api layer joins the
+    // attachment filename onto the cwd. Defaulting it to the directory here made
+    // the write target the directory itself and fail with EISDIR.
+    action.start(`Downloading attachment "${args.attachmentId}" to "${args.outputPath ?? process.cwd()}"`)
 
     const result = await downloadAttachment(auth, args.attachmentId, args.outputPath)
     clearClients()
 
     if (result.success) {
-      action.stop('✓ Successfully uploaded')
+      action.stop('✓ Successfully downloaded')
     } else {
-      action.stop('✗ Upload failed')
+      action.stop('✗ Download failed')
     }
 
     if (flags.toon) {

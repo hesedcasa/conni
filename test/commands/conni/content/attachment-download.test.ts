@@ -12,6 +12,7 @@ describe('content:attachment-download', () => {
   let mockClearClients: any
   let mockAction: any
   let logOutput: string[]
+  let downloadArgs: any[]
 
   beforeEach(async () => {
     logOutput = []
@@ -24,14 +25,19 @@ describe('content:attachment-download', () => {
       }),
     })
 
-    mockDownloadAttachment = async () => ({
-      data: {
-        filename: 'document.pdf',
-        savedTo: '/tmp/document.pdf',
-        size: 1024,
-      },
-      success: true,
-    })
+    downloadArgs = []
+
+    mockDownloadAttachment = async (...args: any[]) => {
+      downloadArgs = args
+      return {
+        data: {
+          filename: 'document.pdf',
+          savedTo: '/tmp/document.pdf',
+          size: 1024,
+        },
+        success: true,
+      }
+    }
 
     mockClearClients = () => {}
 
@@ -58,6 +64,24 @@ describe('content:attachment-download', () => {
     expect(result).to.not.be.null
     expect(result.success).to.be.true
     expect(result.data.filename).to.equal('document.pdf')
+  })
+
+  // The command used to default outputPath to process.cwd(), which made the API
+  // layer write the payload over the directory itself and fail with EISDIR.
+  it('leaves outputPath undefined so the api layer can append the filename', async () => {
+    const command = new ContentDownloadAttachment.default(['att12345'], createMockConfig())
+
+    await command.run()
+
+    expect(downloadArgs[2]).to.be.undefined
+  })
+
+  it('forwards an explicit outputPath unchanged', async () => {
+    const command = new ContentDownloadAttachment.default(['att12345', '/tmp/custom.pdf'], createMockConfig())
+
+    await command.run()
+
+    expect(downloadArgs[2]).to.equal('/tmp/custom.pdf')
   })
 
   it('downloads attachment successfully with output path', async () => {
