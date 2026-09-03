@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.1](https://github.com/hesedcasa/conni/compare/v0.11.0...v0.11.1) (2026-09-03)
+
+
+### 🛠️ Fixes
+
+* surface real Confluence API errors and fix attachment download path ([#122](https://github.com/hesedcasa/conni/issues/122)) ([10e2e19](https://github.com/hesedcasa/conni/commit/10e2e1997773c35d2e32d13ea2080824b81cfc05))
+
+
+### 📄 Documentation
+
+* update CLAUDE.md for plugin-lib architecture ([cef9b71](https://github.com/hesedcasa/conni/commit/cef9b710d341c4d846e688b074109e051fafc79b))
+
 ## [0.11.0](https://github.com/hesedcasa/conni/compare/v0.10.1...v0.11.0) (2026-08-18)
 
 
