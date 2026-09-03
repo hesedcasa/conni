@@ -108,6 +108,29 @@ describe('ConniApi', () => {
       expect((conniApi as any).toErrorResult(rejection).error).to.equal('Confluence request failed with status 404')
     })
 
+    // The exception class name is not always package-qualified, and an undotted
+    // prefix must strip too or the uninformative 'null' leaks through.
+    it('strips an undotted exception class name', () => {
+      const rejection = {message: 'NotFoundException: null', statusCode: 404}
+
+      expect((conniApi as any).toErrorResult(rejection).error).to.equal('Confluence request failed with status 404')
+    })
+
+    it('keeps the detail of an undotted exception that carries a real message', () => {
+      const rejection = {message: 'NotFoundException: No content found with id : 5', statusCode: 404}
+
+      expect((conniApi as any).toErrorResult(rejection).error).to.equal('No content found with id : 5')
+    })
+
+    it('leaves a word that merely starts with Error alone', () => {
+      expect((conniApi as any).toErrorResult({message: 'ErrorBudget: 40% remaining'}).error).to.equal(
+        'ErrorBudget: 40% remaining',
+      )
+      expect((conniApi as any).toErrorResult({message: 'Errors: three of them'}).error).to.equal(
+        'Errors: three of them',
+      )
+    })
+
     it('falls back to the status code when the message strips to nothing', () => {
       const rejection = {message: 'com.example.SomeException: ', statusCode: 500}
 

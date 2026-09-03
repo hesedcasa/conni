@@ -8,9 +8,12 @@ import {buildProxyRequestConfig} from '../proxy.js'
 
 /**
  * Leading java/spring exception class name in a Confluence error message, e.g.
- * `com.atlassian.confluence.api.service.exceptions.api.NotFoundException: `.
+ * `com.atlassian.confluence.api.service.exceptions.api.NotFoundException: `. The
+ * package qualifier is optional, so a bare `NotFoundException: ` strips too. The
+ * class name still has to end in Exception or Error, which keeps an ordinary
+ * message like `Note: something happened` intact.
  */
-const JAVA_EXCEPTION_PREFIX = /^(?:[\w$]+\.)+[\w$]*(?:Exception|Error):\s*/
+const JAVA_EXCEPTION_PREFIX = /^(?:[\w$]+\.)*[\w$]*(?:Exception|Error):\s*/
 
 /**
  * Reduce a thrown value to a human-readable message.
