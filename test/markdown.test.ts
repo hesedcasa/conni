@@ -1,4 +1,5 @@
 import {expect} from 'chai'
+import {createRequire} from 'node:module'
 
 import {markdownToAdfDocument, unescapeNewlines} from '../src/markdown.js'
 
@@ -16,6 +17,18 @@ function hasHardBreak(node?: AdfNode[]): boolean {
 }
 
 describe('markdown', () => {
+  // src/markdown.ts flips marked's `breaks` option through setOptions, which
+  // mutates a global on the marked module instance. marklassian only sees it
+  // while npm resolves a single copy of marked for both packages; widening this
+  // package's marked range past marklassian's nests a second copy and the
+  // hardBreak assertions below start failing for a reason nothing else names.
+  it('resolves the same marked copy as marklassian', () => {
+    const requireHere = createRequire(import.meta.url)
+    const requireFromMarklassian = createRequire(requireHere.resolve('marklassian/package.json'))
+
+    expect(requireFromMarklassian.resolve('marked/package.json')).to.equal(requireHere.resolve('marked/package.json'))
+  })
+
   describe('unescapeNewlines', () => {
     it('turns literal backslash-n sequences into real newlines', () => {
       expect(unescapeNewlines(String.raw`a\nb\nc`)).to.equal('a\nb\nc')
