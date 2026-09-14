@@ -13,3 +13,12 @@ updates:
       prefix: chore
       prefix-development: chore
       include: scope
+    ignore:
+      # marked is here only so src/markdown.ts can flip `breaks` on the lexer
+      # marklassian calls, which needs both packages to resolve one copy of
+      # marked. A major past marklassian's range (`^15.0.6 || ^16.0.0` as of
+      # marklassian 1.2.1) nests a second copy and silently drops line breaks,
+      # so it stays pinned until marklassian itself moves.
+      - dependency-name: marked
+        update-types:
+          - version-update:semver-major

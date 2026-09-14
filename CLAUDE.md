@@ -81,6 +81,8 @@ Convert through `markdownToAdfDocument()` from [src/markdown.ts](src/markdown.ts
 
 `unescapeNewlines()` is exported separately for the `representation=storage` path, which sends the raw body straight through and skips ADF entirely.
 
+**The `marked` dependency is not a library here — it is a handle on marklassian's lexer.** `setOptions` mutates a global on the marked _module instance_, so `breaks` only reaches `markdownToAdf()` while npm resolves one copy of marked for both packages. Keep the `marked` range inside marklassian's own (`^15.0.6 || ^16.0.0` as of marklassian 1.2.1); a major beyond it nests a second copy under marklassian, `breaks` is silently lost, and every single newline collapses again. Dependabot is configured to skip marked majors for this reason, and `test/markdown.test.ts` asserts the shared resolution directly so the failure names its own cause.
+
 ### Inline media on page creation
 
 `createPageWithMedia()` is a two-phase operation: upload each `--attach` file, then rewrite the ADF. `collectExternalMedia()` indexes `mediaSingle` nodes whose `attrs.type === 'external'` by URL basename; `patchMediaNodes()` swaps those to `type: 'file'` with the uploaded `id`/`collection`, and appends `mediaSingle` nodes for attachments not referenced inline. So `![diagram](./diagram.png)` in the body embeds in place, while an unreferenced `--attach` lands at the end.

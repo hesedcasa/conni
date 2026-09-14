@@ -10,6 +10,15 @@ export type AdfDocument = ReturnType<typeof markdownToAdf>
 // single newlines, which marklassian renders as a `hardBreak` node. marked's own
 // grammar still protects block constructs (code blocks, tables, lists), so those
 // are never corrupted. setOptions mutates a global default, so we apply it once.
+//
+// That global lives on the marked *module instance*, so this only works while
+// npm resolves one copy of marked for both this package and marklassian. The
+// `marked` dependency exists solely to reach marklassian's lexer — it is never
+// used as a library here — so its range must stay inside marklassian's own
+// (`^15.0.6 || ^16.0.0` as of marklassian 1.2.1). A wider range makes npm nest a
+// second copy under marklassian, `breaks` never reaches the lexer, and every
+// single newline silently collapses again. test/markdown.test.ts asserts both
+// the shared resolution and the resulting hardBreak nodes.
 let isBreaksEnabled = false
 
 /**
