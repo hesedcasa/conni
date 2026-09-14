@@ -17,8 +17,13 @@ const config = [
   // includes ./src, so test files have no type information available, and test
   // fixtures and mocks shouldn't fail type-aware rules such as no-unsafe-* /
   // no-base-to-string anyway.
+  //
+  // scripts/ gets the same treatment: it holds standalone maintenance scripts
+  // (the stale-fixture sweep) that run via ts-node and aren't part of the src/
+  // build project, so there is no tsconfig for the type-aware project service
+  // to resolve them against.
   {
-    files: ['test/**/*.ts'],
+    files: ['test/**/*.ts', 'scripts/**/*.ts'],
     ...tseslint.configs.disableTypeChecked,
   },
   // typescript-eslint is a transitive dependency (via eslint-config-oclif), so

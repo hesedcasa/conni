@@ -164,6 +164,63 @@ static override args = {
 - `tsconfig.json` excludes `test/`, so type-aware lint rules are switched off there via `tseslint.configs.disableTypeChecked`; `test/tsconfig.json` is `noEmit` for editor support only.
 - Verify the `examples` on any command you touch actually run.
 
+### End-to-end tests
+
+`test/e2e/**` runs the built `bin/run.js` as a real subprocess against the live
+Confluence sandbox. It is excluded from `npm test` and needs credentials
+exported first, because nothing in this repo loads `.env`:
+
+```bash
+set -a; . ./.env; set +a
+npm run test:e2e              # build, run, then sweep
+npm run test:e2e -- --keep    # leave fixtures behind for inspection
+npm run e2e:mocha             # run without rebuilding
+npm run e2e:sweep             # reclaim stale fixtures and purge the trash
+```
+
+`e2e:sweep` also deletes the _current_ run's fixtures when `E2E_RUN_ID` is set
+— `scripts/e2e.sh` and the CI workflow both set it, so a mocha killed before
+its `after` hooks ran (a job timeout, a local Ctrl-C) still gets cleaned up
+instead of waiting an hour for the stale sweep to reach it.
+
+Rules specific to this suite:
+
+- **Never pass `--json`.** JSON is already the default (`BaseCommand.jsonEnabled()`);
+  `--json` is not a declared flag and the command will fail to parse.
+- **Know which exit code to expect.** An `ApiResult` failure exits **0** with
+  `{error, success: false}` — `ConniApi` never throws, so oclif sees a
+  successful command. Only `this.error(...)` paths exit non-zero: a missing
+  profile exits 1, and plugin-lib's `auth test` exits 2. Assert on `success`,
+  not on `$?`, unless the path is one of those two.
+- **Never assert on error message text.** Confluence translates its messages.
+  Assert on exit codes, `success`, and the HTTP status substring.
+- **Fixtures are created with raw `fetch` in `test/e2e/fixtures.ts`, never
+  through the CLI** — they are the oracle the CLI is checked against.
+- **Quote every CQL value.** An unquoted `space=Sidekick` is a parse error that
+  comes back with no `size` field at all, which reads as "nothing matched".
+- **The CQL index is eventually consistent _and_ not monotonic.** A page was
+  observed appearing at t+2s, absent again at t+4s, and stable only from t+5s.
+  So `waitForIndexed` takes explicit page ids (a count is satisfied by the
+  wrong page — every fixture shares the run label with its parent) and requires
+  three consecutive confirming polls. Assertions against the CLI's own search
+  wrap in `eventually(...)` rather than trusting a single lookup.
+- **A suite that makes CQL assertions needs its own label.** Pass one as
+  `seedPage`'s second argument: the shared run label is deleted out from under
+  it by every other suite's `cleanupRun`, and racing those deletions through
+  the index is the flakiest thing here.
+- **Purge, don't just trash.** Confluence's delete is two-phase, and
+  `conni content delete` only performs the first. Pages the CLI created carry
+  no fixture label either, so tests that create through the CLI must call
+  `deletePage` on the way out; `purgeTrashedFixtures` is the backstop.
+- **No regex literals in `test/**`.** `require-unicode-regexp` demands the `v`
+  flag, which needs TS target `es2024` while this repo targets `es2022`, so
+  eslint and tsc contradict each other. Use string methods — `isNumericId` in
+  `helpers.ts` is the example.
+
+Fixtures live in the `Sidekick` space, nested under a per-run parent page. Its
+four template pages are not in the CQL index, so a space-scoped search only ever
+sees what this suite created.
+
 ## Configuration
 
 Auth lives in `conni-config.json` under oclif's platform-dependent config dir (`~/.config/conni/` on Linux). The file is profile-keyed and read/written entirely by `@hesed/plugin-lib` — `auth add` requires `-p <profile>`, `auth profile` selects the default, and every Confluence command accepts `-p` to override. A profile holds `host`, `email`, and `apiToken`; omitting `email` switches `getClient()` to OAuth2 bearer auth.
