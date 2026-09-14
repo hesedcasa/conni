@@ -27,7 +27,8 @@ type ConfluenceResponse = {body: unknown; status: number}
  *
  * Confluence's CQL index is asynchronous — a fixture took as long as 14 seconds
  * to become searchable — so a CQL lookup alone can miss a page created moments
- * earlier and silently leave it behind.
+ * earlier and silently leave it behind. `trackPage` feeds it the pages the CLI
+ * creates, which carry no label of their own until it stamps one on.
  */
 const created = new Set<string>()
 
@@ -264,6 +265,46 @@ export async function pageHttpStatus(id: string): Promise<number> {
 }
 
 /**
+ * Adopts a page the CLI created, so cleanup can reclaim it.
+ *
+ * `conni content create` stamps no fixture label, so a page only the CLI made
+ * is invisible to every label-driven sweep — and a test that fails between
+ * creating it and its final `deletePage` would leak it into the sandbox.
+ * Recording the id fixes the in-run leak; stamping the labels extends the
+ * label-driven cleanup (and the ownership check inside `purgeTrashedFixtures`)
+ * to the page as well.
+ *
+ * The id is recorded before labelling, so even a labelling failure leaves the
+ * in-run backstop intact.
+ *
+ * @param id The page id the CLI just created.
+ * @throws {Error} If Confluence refuses the label.
+ */
+export async function trackPage(id: string): Promise<void> {
+  created.add(id)
+  // The label endpoint takes the same {name, prefix} shape the create endpoint
+  // reads from metadata.labels.
+  const {body, status} = await call('POST', `/wiki/rest/api/content/${id}/label`, LABEL_METADATA)
+  if (status !== 200) {
+    throw new Error(`trackPage ${id} failed to label: ${status} ${JSON.stringify(body)}`)
+  }
+}
+
+/**
+ * Trashes a page without purging it — the state `conni content delete` leaves
+ * behind, and the state `purgeTrashedFixtures` has to make a decision about.
+ *
+ * @param id The page id.
+ * @throws {Error} If Confluence refuses the deletion.
+ */
+export async function trashPage(id: string): Promise<void> {
+  const {body, status} = await call('DELETE', `/wiki/rest/api/content/${id}`)
+  if (status !== 204 && status !== 404) {
+    throw new Error(`trashPage ${id} failed: ${status} ${JSON.stringify(body)}`)
+  }
+}
+
+/**
  * Deletes a page, tolerating one that is already gone.
  *
  * Confluence's delete is two-phase: the first call moves the page to the
@@ -278,10 +319,7 @@ export async function pageHttpStatus(id: string): Promise<number> {
  * @throws {Error} If either phase fails for a reason other than "already gone".
  */
 export async function deletePage(id: string): Promise<void> {
-  const trashed = await call('DELETE', `/wiki/rest/api/content/${id}`)
-  if (trashed.status !== 204 && trashed.status !== 404) {
-    throw new Error(`deletePage ${id} failed to trash: ${trashed.status} ${JSON.stringify(trashed.body)}`)
-  }
+  await trashPage(id)
 
   const purged = await call('DELETE', `/wiki/rest/api/content/${id}?status=trashed`)
   if (purged.status !== 204 && purged.status !== 404) {
@@ -337,30 +375,27 @@ export async function cleanupRun(): Promise<void> {
 }
 
 /**
- * Title prefix shared by every page this suite creates, seeded or CLI-made.
- *
- * `fixtureTitle` is the only way test pages get named, so this is a reliable
- * second guard alongside the space scope when labels are unavailable.
- */
-const FIXTURE_TITLE_PREFIX = '[e2e '
-
-/**
  * Purges e2e pages sitting in the fixture space's trash.
  *
- * The label-driven cleanup cannot reach these. Pages created through
- * `conni content create` carry no fixture label, and `conni content delete` is
- * single-phase — it trashes but never purges — so without this they pile up in
- * the trash indefinitely, invisible to CQL but still there.
+ * Label-driven cleanup cannot reach these: a trashed page leaves the CQL index,
+ * so neither `cleanupRun` nor `sweepStale` ever sees it again, and the trash is
+ * exactly where `conni content delete` — single-phase — leaves every page a
+ * test deleted through the CLI.
  *
- * Doubly guarded: the listing is scoped to the fixture space, and only titles
- * carrying the fixture prefix are purged, so nothing a human trashed is at risk.
+ * Ownership is decided by the fixture label and nothing else. A title prefix is
+ * not an ownership marker — a human's page can plausibly be titled
+ * "[e2e notes]" — and purging is irreversible, so a candidate is purged only
+ * once its label has actually been read back. That read has to go through the
+ * v2 pages API, because the v1 view of trashed content strips labels and 404s
+ * content properties (both verified against the live API); v1 is still used for
+ * the listing itself, since it is the one that honours the space filter.
  *
  * @returns How many pages were purged.
  * @throws {Error} If the trash listing fails.
  */
 export async function purgeTrashedFixtures(): Promise<number> {
   const limit = 100
-  const ids: string[] = []
+  const candidates: string[] = []
 
   for (let start = 0; ; start += limit) {
     const query = new URLSearchParams({
@@ -376,17 +411,35 @@ export async function purgeTrashedFixtures(): Promise<number> {
       throw new Error(`purgeTrashedFixtures failed: ${status} ${JSON.stringify(body)}`)
     }
 
-    const page = body as {results?: Array<{id: string; title: string}>}
+    const page = body as {results?: Array<{id: string}>}
     const results = page.results ?? []
-    ids.push(...results.filter((result) => result.title.startsWith(FIXTURE_TITLE_PREFIX)).map((result) => result.id))
+    candidates.push(...results.map((result) => result.id))
 
     if (results.length < limit) break
   }
 
+  const verdicts = await Promise.all(candidates.map(async (id) => ({id, owned: await carriesFixtureLabel(id)})))
+  const owned = verdicts.filter((verdict) => verdict.owned).map((verdict) => verdict.id)
+
   // Already trashed, so only the purge phase is left; deletePage tolerates the
   // 404 its first phase gets back.
-  await deleteAll(ids)
-  return ids.length
+  await deleteAll(owned)
+  return owned.length
+}
+
+/**
+ * Whether a page carries the shared fixture label — the only marker this suite
+ * treats as proof of ownership.
+ *
+ * A read that fails for any reason counts as "not ours": the failure mode of a
+ * wrong guess is an unrecoverable purge of someone else's page, while leaving a
+ * page in the trash only costs cleanup noise.
+ */
+async function carriesFixtureLabel(id: string): Promise<boolean> {
+  const {body, status} = await call('GET', `/wiki/api/v2/pages/${id}/labels`)
+  if (status !== 200) return false
+  const labels = (body as {results?: Array<{name?: string}>}).results ?? []
+  return labels.some((label) => label.name === SHARED_LABEL)
 }
 
 /**

@@ -1,6 +1,6 @@
 import {expect} from 'chai'
 
-import {cleanupRun, deletePage, fixtureTitle, pageHttpStatus, RUN_ID} from './fixtures.js'
+import {cleanupRun, deletePage, fixtureTitle, pageHttpStatus, RUN_ID, trackPage} from './fixtures.js'
 import {createConfigDir, E2E_SPACE, isNumericId, removeConfigDir, runCli, runCliJson} from './helpers.js'
 
 type PageData = {id: string; title: string; version?: {number: number}}
@@ -15,10 +15,11 @@ describe('e2e: page lifecycle', () => {
     configDir = await createConfigDir()
   })
 
-  // The page is created by the CLI rather than seeded, so it carries no fixture
-  // label and cleanupRun's lookup cannot see it. deletePage purges it by id —
-  // necessary even after the delete test passed, because the CLI's own delete
-  // only moves the page to the trash.
+  // The page is created by the CLI rather than seeded. trackPage stamps the
+  // fixture labels onto it, so cleanupRun's lookup sees it even when a test
+  // fails mid-suite; deletePage purges it by id — necessary even after the
+  // delete test passed, because the CLI's own delete only moves the page to
+  // the trash.
   after(async () => {
     try {
       if (pageId) await deletePage(pageId)
@@ -45,8 +46,11 @@ describe('e2e: page lifecycle', () => {
     )
 
     expect(payload.success).to.be.true
-    expect(payload.data.title).to.equal(title)
     pageId = payload.data.id
+    // Recorded and labelled before anything below can fail, so a failure here
+    // still leaves the after() hooks able to reclaim the page.
+    await trackPage(pageId)
+    expect(payload.data.title).to.equal(title)
     expect(isNumericId(pageId), `create should return a numeric page id, got ${pageId}`).to.be.true
   })
 

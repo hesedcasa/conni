@@ -4,7 +4,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
-import {cleanupRun, deletePage, fixtureTitle, seedPage} from './fixtures.js'
+import {cleanupRun, deletePage, fixtureTitle, seedPage, trackPage} from './fixtures.js'
 import {createConfigDir, E2E_SPACE, removeConfigDir, runCli, runCliJson} from './helpers.js'
 
 type Attachments = {data: {results: Array<{id: string; title: string}>}; success: boolean}
@@ -113,6 +113,9 @@ describe('e2e: attachments', () => {
       configDir,
     )
     expect(created.success).to.be.true
+    // Tracked before anything below can fail: a CLI-made page carries no label
+    // of its own, so without this a failed assertion would leak it.
+    await trackPage(created.data.id)
 
     const read = await runCliJson<Storage>(['conni', 'content', created.data.id], configDir)
     const storage = read.data.body.storage.value
@@ -123,8 +126,8 @@ describe('e2e: attachments', () => {
     expect(storage).to.contain('diagram.png')
     expect(storage).to.not.contain('./diagram.png')
 
-    // Created by the CLI, so it carries no fixture label for cleanupRun to find
-    // — and the CLI's delete would only trash it. Purge it by id.
+    // Purged by id rather than left for cleanupRun: the CLI's delete only
+    // trashes, and a trashed page is invisible to CQL cleanup.
     await deletePage(created.data.id)
   })
 
@@ -149,6 +152,8 @@ describe('e2e: attachments', () => {
       configDir,
     )
     expect(created.success).to.be.true
+    // Tracked before anything below can fail, same as the inline-media test.
+    await trackPage(created.data.id)
 
     const read = await runCliJson<Storage>(['conni', 'content', created.data.id], configDir)
     const storage = read.data.body.storage.value

@@ -209,9 +209,14 @@ Rules specific to this suite:
   it by every other suite's `cleanupRun`, and racing those deletions through
   the index is the flakiest thing here.
 - **Purge, don't just trash.** Confluence's delete is two-phase, and
-  `conni content delete` only performs the first. Pages the CLI created carry
-  no fixture label either, so tests that create through the CLI must call
-  `deletePage` on the way out; `purgeTrashedFixtures` is the backstop.
+  `conni content delete` only performs the first. Tests that create a page
+  through the CLI must call `trackPage` on the id it returns — immediately,
+  before any assertion can fail — which records it for `cleanupRun` and stamps
+  the fixture labels onto it; then purge with `deletePage` on the way out.
+  `purgeTrashedFixtures` is the backstop, and it purges a trashed page only
+  when the label can be read back through the v2 pages API: v1 strips labels
+  (and 404s content properties) from trashed content, so the title alone
+  proves nothing and must never be the reason a page gets purged.
 - **No regex literals in `test/**`.** `require-unicode-regexp` demands the `v`
   flag, which needs TS target `es2024` while this repo targets `es2022`, so
   eslint and tsc contradict each other. Use string methods — `isNumericId` in
