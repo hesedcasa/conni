@@ -16,7 +16,7 @@
     "marked": "^16.0.0",
     "marklassian": "^1.1.0",
     "proxy-from-env": "^2.1.0",
-    "undici": "^7.16.0"
+    "undici": "^8.10.2"
   },
   "devDependencies": {
     "@eslint/compat": "^2",
