@@ -13,10 +13,10 @@
     "@oclif/core": "^5",
     "confluence.js": "^3.2.0",
     "fs-extra": "^11.3.3",
-    "https-proxy-agent": "^9.1.0",
     "marked": "^16.0.0",
     "marklassian": "^1.1.0",
-    "proxy-from-env": "^2.1.0"
+    "proxy-from-env": "^2.1.0",
+    "undici": "^7.16.0"
   },
   "devDependencies": {
     "@eslint/compat": "^2",

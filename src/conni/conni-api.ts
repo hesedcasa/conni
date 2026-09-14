@@ -1,11 +1,12 @@
 import {type ApiResult, type AuthConfig} from '@hesed/plugin-lib'
-import {ConfluenceClient} from 'confluence.js'
+import {createV1Client, createV2Client, isApiError, type V1Client, type V2Client} from 'confluence.js'
+import {createClient} from 'confluence.js/core'
 import fs from 'fs-extra'
 import path from 'node:path'
 import {inspect} from 'node:util'
 
 import {type AdfDocument, markdownToAdfDocument, unescapeNewlines} from '../markdown.js'
-import {buildProxyRequestConfig} from '../proxy.js'
+import {installProxyDispatcher} from '../proxy.js'
 
 /**
  * Leading java/spring exception class name in a Confluence error message, e.g.
@@ -17,15 +18,60 @@ import {buildProxyRequestConfig} from '../proxy.js'
 const JAVA_EXCEPTION_PREFIX = /^(?:[\w$]+\.)*[\w$]*(?:Exception|Error):\s*/
 
 /**
+ * confluence.js's v2 parameter types declare numeric ids, but the library never
+ * validates request parameters at runtime — the id only flows into the URL
+ * template. Confluence ids reach 19 digits, beyond Number.MAX_SAFE_INTEGER, so
+ * converting to a number would silently corrupt them; passing the string through
+ * keeps them exact. (The library's own response models type ids as strings.)
+ */
+function asV2Id(id: string): number {
+  return id as unknown as number
+}
+
+/** Human-readable messages Confluence puts in an error body, preferring its own translations. */
+function errorBodyMessages(body: unknown): string[] {
+  if (typeof body !== 'object' || body === null) return []
+
+  const {errors} = body as {errors?: unknown}
+  if (!Array.isArray(errors)) return []
+
+  const messages: string[] = []
+  for (const entry of errors) {
+    if (typeof entry !== 'object' || entry === null) continue
+
+    const translation = (entry as {message?: {translation?: unknown}}).message?.translation
+    if (typeof translation === 'string' && translation !== '') {
+      messages.push(translation)
+      continue
+    }
+
+    // v2 endpoints report `{code, title}` instead of a translated message.
+    const {title} = entry as {title?: unknown}
+    if (typeof title === 'string' && title !== '') messages.push(title)
+  }
+
+  return messages
+}
+
+/**
  * Reduce a thrown value to a human-readable message.
  *
- * confluence.js rejects with a plain object (`{statusCode, data?, message}`) rather
- * than an Error, so a bare `String(error)` yields '[object Object]' and hides the
- * real cause. Prefer Confluence's own translated messages, fall back to the raw
- * message with its java exception prefix stripped, and never return
- * '[object Object]'.
+ * confluence.js 3.x throws typed `ApiError` subclasses (of `Error`) whose
+ * `message` embeds the raw response body, so prefer the parsed `body`'s
+ * Confluence-translated messages and fall back to a status summary. Non-Error
+ * values (defensive, and the shape older confluence.js versions rejected with)
+ * still reduce to their message rather than '[object Object]'.
  */
 function toErrorMessage(error: unknown): string {
+  if (isApiError(error)) {
+    const messages = errorBodyMessages(error.body)
+    if (messages.length > 0) {
+      return messages.join('; ')
+    }
+
+    return `Confluence request failed with status ${error.status}`
+  }
+
   if (error instanceof Error) {
     return error.message
   }
@@ -79,7 +125,7 @@ function toErrorMessage(error: unknown): string {
  * Provides core Confluence API operations
  */
 export class ConniApi {
-  private client?: ConfluenceClient
+  private clients?: {v1: V1Client; v2: V2Client}
   private readonly config: AuthConfig
 
   constructor(config: AuthConfig) {
@@ -107,16 +153,15 @@ export class ConniApi {
         }
       }
 
-      const client = this.getClient()
+      const {v1} = this.getClient()
       const fileContent = fs.readFileSync(filePath)
       const fileName = path.basename(filePath)
 
-      const response = await client.contentAttachments.createAttachments({
+      const response = await v1.contentAttachments.createAttachment({
         attachments: [
           {
-            file: fileContent,
+            content: fileContent,
             filename: fileName,
-            minorEdit: false,
           },
         ],
         id: pageId,
@@ -136,25 +181,17 @@ export class ConniApi {
    */
   async addComment(pageId: string, body: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v2} = this.getClient()
 
       // Convert Markdown body to Confluence ADF
       const bodyContent = markdownToAdfDocument(body)
 
-      const response = await client.content.createContent({
+      const response = await v2.comment.createFooterComment({
         body: {
-          storage: {
-            representation: 'atlas_doc_format',
-            value: JSON.stringify(bodyContent),
-          },
+          representation: 'atlas_doc_format',
+          value: JSON.stringify(bodyContent),
         },
-        container: {
-          id: pageId,
-          type: 'page',
-        },
-        space: {key: ''},
-        title: '',
-        type: 'comment',
+        pageId,
       })
 
       return {
@@ -171,9 +208,9 @@ export class ConniApi {
    */
   async addLabels(pageId: string, labels: string[], prefix = 'global'): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v1} = this.getClient()
 
-      const response = await client.contentLabels.addLabelsToContent({
+      const response = await v1.contentLabels.addLabelsToContent({
         body: labels.map((name) => ({name, prefix})),
         id: pageId,
       })
@@ -191,7 +228,7 @@ export class ConniApi {
    * Clear client (for cleanup)
    */
   clearClients(): void {
-    this.client = undefined
+    this.clients = undefined
   }
 
   /**
@@ -199,9 +236,10 @@ export class ConniApi {
    */
   async createPage(fields: Record<string, unknown>): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v2} = this.getClient()
       const {contentPayload} = this.buildPageBody(fields)
-      const response = await client.content.createContent(contentPayload)
+      const spaceId = await this.resolveSpaceId(fields.spaceKey as string)
+      const response = await v2.page.createPage({body: {...contentPayload, spaceId}})
 
       if (fields.fullWidth && response.id) {
         await this.setPageAppearance(response.id, 'full-width')
@@ -220,9 +258,11 @@ export class ConniApi {
    */
   async createPageWithMedia(fields: Record<string, unknown>, filePaths: string[]): Promise<ApiResult> {
     try {
-      const client = this.getClient()
       const {bodyContent, contentPayload} = this.buildPageBody(fields)
-      const {title} = contentPayload
+      const {
+        body: {representation},
+        title,
+      } = contentPayload
 
       const externalMediaByBasename = new Map<string, Array<Record<string, unknown>>>()
       this.collectExternalMedia(bodyContent.content, externalMediaByBasename)
@@ -238,7 +278,9 @@ export class ConniApi {
       }
 
       // Create the page first to get a page ID for attachment uploads.
-      const page = await client.content.createContent(contentPayload)
+      const {v2} = this.getClient()
+      const spaceId = await this.resolveSpaceId(fields.spaceKey as string)
+      const page = await v2.page.createPage({body: {...contentPayload, spaceId}})
       const pageId = (page as {id?: string}).id
       if (!pageId) {
         return {error: 'Failed to get page ID from creation response', success: false}
@@ -262,12 +304,16 @@ export class ConniApi {
 
       this.patchMediaNodes(bodyContent.content, inlinePaths, trailingPaths, fileInfoByPath, externalMediaByBasename)
 
-      const updatedPage = await client.content.updateContent({
-        body: {storage: {representation: 'atlas_doc_format', value: JSON.stringify(bodyContent)}},
-        id: pageId,
-        title,
-        type: 'page',
-        version: {number: 2},
+      const updatedPage = await v2.page.updatePage({
+        body: {
+          // The v2 update endpoint requires id and status in the body itself.
+          body: {representation, value: JSON.stringify(bodyContent)},
+          id: pageId,
+          status: (page as {status?: string}).status ?? 'current',
+          title,
+          version: {number: 2},
+        },
+        id: asV2Id(pageId),
       })
 
       return {data: updatedPage, success: true}
@@ -281,8 +327,8 @@ export class ConniApi {
    */
   async deleteComment(id: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
-      await client.content.deleteContent({id})
+      const {v2} = this.getClient()
+      await v2.comment.deleteFooterComment({commentId: asV2Id(id)})
 
       return {
         data: true,
@@ -298,8 +344,8 @@ export class ConniApi {
    */
   async deleteContent(pageId: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
-      await client.content.deleteContent({id: pageId})
+      const {v2} = this.getClient()
+      await v2.page.deletePage({id: asV2Id(pageId)})
 
       return {
         data: true,
@@ -315,33 +361,34 @@ export class ConniApi {
    */
   async downloadAttachment(attachmentId: string, outputPath?: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v1, v2} = this.getClient()
 
       // Get attachment metadata
-      const attachment = await client.content.getContentById({
-        expand: ['container', 'metadata.mediaType', 'version'],
-        id: attachmentId,
-      })
+      const attachment = await v2.attachment.getAttachmentById({id: attachmentId})
 
       const fileName = (attachment as {title?: string}).title || 'download'
-      const mediaType =
-        (attachment as {metadata?: {mediaType?: string}}).metadata?.mediaType || 'application/octet-stream'
-      const containerId = (attachment as {container?: {id?: string}}).container?.id
+      const mediaType = (attachment as {mediaType?: string}).mediaType || 'application/octet-stream'
+      const {pageId} = attachment as {pageId?: string}
 
-      if (!containerId) {
+      if (!pageId) {
         return {
           error: `Attachment ${attachmentId} has no parent content`,
           success: false,
         }
       }
 
-      const buffer = await client.contentAttachments.downloadAttachment({
+      const buffer = await v1.contentAttachments.downloadAttatchment({
         attachmentId,
-        id: containerId,
+        id: pageId,
       })
 
+      // The library types its Buffer as `ArrayBuffer | ArrayBufferView`, but its
+      // download path always produces a Uint8Array (core/createClient.js wraps
+      // response.arrayBuffer()), so the cast is what the runtime value is.
+      const bytes = buffer as Uint8Array
+
       const finalPath = outputPath || path.join(process.cwd(), fileName)
-      fs.writeFileSync(finalPath, buffer)
+      fs.writeFileSync(finalPath, bytes)
 
       return {
         data: {
@@ -349,7 +396,7 @@ export class ConniApi {
           filename: fileName,
           mimeType: mediaType,
           savedTo: finalPath,
-          size: buffer.length,
+          size: bytes.length,
         },
         success: true,
       }
@@ -359,33 +406,39 @@ export class ConniApi {
   }
 
   /**
-   * Get or create Confluence client
+   * Get or create Confluence clients
+   *
+   * One core transport serves both API versions: v1 keeps the operations
+   * Atlassian has not moved (CQL search, label writes, attachment upload and
+   * download, current user), while pages, spaces, comments and reads live in v2.
    */
-  getClient(): ConfluenceClient {
-    if (this.client) {
-      return this.client
+  getClient(): {v1: V1Client; v2: V2Client} {
+    if (this.clients) {
+      return this.clients
     }
 
-    const baseRequestConfig = buildProxyRequestConfig(this.config.host!)
+    installProxyDispatcher(this.config.host!)
 
-    this.client = new ConfluenceClient({
-      authentication: this.config.email
+    const core = createClient({
+      auth: this.config.email
         ? {
-            basic: {
-              apiToken: this.config.apiToken,
-              email: this.config.email,
-            },
+            apiToken: this.config.apiToken,
+            email: this.config.email,
+            type: 'basic',
           }
         : {
-            oauth2: {
-              accessToken: this.config.apiToken,
-            },
+            token: this.config.apiToken,
+            // A bare bearer token against the configured host — the 2.x `oauth2`
+            // behavior. 3.x's `oauth2` auth routes through the api.atlassian.com
+            // gateway instead, which is not what conni profiles describe.
+            type: 'bearer',
           },
-      ...(baseRequestConfig && {baseRequestConfig}),
       host: this.config.host!,
     })
 
-    return this.client
+    this.clients = {v1: createV1Client(core), v2: createV2Client(core)}
+
+    return this.clients
   }
 
   /**
@@ -393,10 +446,11 @@ export class ConniApi {
    */
   async getContent(pageId: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
-      const page = await client.content.getContentById({
-        expand: ['body.storage', 'children.attachment', 'children.comment', 'space', 'version'],
-        id: pageId,
+      const {v2} = this.getClient()
+      const page = await v2.page.getPageById({
+        bodyFormat: 'storage',
+        id: asV2Id(pageId),
+        includeVersion: true,
       })
 
       return {
@@ -413,9 +467,9 @@ export class ConniApi {
    */
   async getLabels(pageId: string, prefix?: string, limit?: number): Promise<ApiResult> {
     try {
-      const client = this.getClient()
-      const response = await client.contentLabels.getLabelsForContent({
-        id: pageId,
+      const {v2} = this.getClient()
+      const response = await v2.label.getPageLabels({
+        id: asV2Id(pageId),
         limit,
         prefix,
       })
@@ -434,8 +488,16 @@ export class ConniApi {
    */
   async getSpace(spaceKey: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
-      const space = await client.space.getSpace({spaceKey})
+      const {v2} = this.getClient()
+      const response = await v2.space.getSpaces({keys: [spaceKey]})
+
+      const space = (response as {results?: unknown[]}).results?.[0]
+      if (!space) {
+        return {
+          error: `Space not found: ${spaceKey}`,
+          success: false,
+        }
+      }
 
       return {
         data: space,
@@ -451,11 +513,11 @@ export class ConniApi {
    */
   async listSpaces(): Promise<ApiResult> {
     try {
-      const client = this.getClient()
-      const response = await client.space.getSpaces()
+      const {v2} = this.getClient()
+      const response = await v2.space.getSpaces()
 
       const spaces = response.results || []
-      const simplifiedSpaces = spaces.map((s: {id?: number; key?: string; name?: string; type?: string}) => ({
+      const simplifiedSpaces = spaces.map((s: {id?: string; key?: string; name?: string; type?: string}) => ({
         id: String(s.id),
         key: s.key,
         name: s.name,
@@ -476,10 +538,10 @@ export class ConniApi {
    */
   async removeLabel(pageId: string, label: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v1} = this.getClient()
       // The query-parameter variant is used because the path-parameter one
       // rejects label names containing "/".
-      await client.contentLabels.removeLabelFromContentUsingQueryParameter({
+      await v1.contentLabels.removeLabelFromContentUsingQueryParameter({
         id: pageId,
         name: label,
       })
@@ -498,9 +560,9 @@ export class ConniApi {
    */
   async searchContents(cql: string, limit = 10, expand?: string[]): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v1} = this.getClient()
 
-      const response = await client.content.searchContentByCQL({
+      const response = await v1.content.searchContentByCQL({
         cql,
         expand,
         limit,
@@ -520,13 +582,13 @@ export class ConniApi {
    */
   async setPageAppearance(pageId: string, appearance: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v2} = this.getClient()
       await Promise.all(
         ['content-appearance-published', 'content-appearance-draft'].map(async (key) =>
-          client.contentProperties.createContentProperty({
-            id: pageId,
+          v2.contentProperties.createPageProperty({
             key,
-            value: appearance as unknown as Record<string, string>,
+            pageId: asV2Id(pageId),
+            value: appearance,
           }),
         ),
       )
@@ -542,8 +604,8 @@ export class ConniApi {
    */
   async testConnection(): Promise<ApiResult> {
     try {
-      const client = this.getClient()
-      const currentUser = await client.users.getCurrentUser()
+      const {v1} = this.getClient()
+      const currentUser = await v1.users.getCurrentUser()
 
       return {
         data: {currentUser, serverInfo: {}},
@@ -559,32 +621,30 @@ export class ConniApi {
    */
   async updateComment(commentId: string, body: string): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v2} = this.getClient()
 
       // Convert Markdown body to Confluence ADF
       const bodyContent = markdownToAdfDocument(body)
 
       // Get current comment to find its version
-      const comment = await client.content.getContentById({
-        expand: ['version'],
-        id: commentId,
+      const comment = await v2.comment.getFooterCommentById({
+        commentId: asV2Id(commentId),
+        includeVersion: true,
       })
 
       const currentVersion = ((comment as {version?: {number?: number}}).version?.number ?? 0) + 1
 
-      const response = await client.content.updateContent({
+      const response = await v2.comment.updateFooterComment({
         body: {
-          storage: {
+          body: {
             representation: 'atlas_doc_format',
             value: JSON.stringify(bodyContent),
           },
+          version: {
+            number: currentVersion,
+          },
         },
-        id: commentId,
-        title: '',
-        type: 'comment',
-        version: {
-          number: currentVersion,
-        },
+        commentId: asV2Id(commentId),
       })
 
       return {
@@ -601,12 +661,12 @@ export class ConniApi {
    */
   async updateContent(pageId: string, fields: Record<string, unknown>): Promise<ApiResult> {
     try {
-      const client = this.getClient()
+      const {v2} = this.getClient()
 
       // Get current page to find its version
-      const page = await client.content.getContentById({
-        expand: ['version'],
-        id: pageId,
+      const page = await v2.page.getPageById({
+        id: asV2Id(pageId),
+        includeVersion: true,
       })
 
       const currentVersion = ((page as {version?: {number?: number}}).version?.number ?? 0) + 1
@@ -615,23 +675,25 @@ export class ConniApi {
       const representation = (fields.representation as string | undefined) ?? 'atlas_doc_format'
       const isStorage = representation === 'storage'
 
-      const response = await client.content.updateContent({
-        id: pageId,
-        type: 'page',
-        ...(body !== undefined && {
-          body: {
-            storage: {
+      const response = await v2.page.updatePage({
+        body: {
+          // Storage bodies are sent verbatim, so unescape here; the ADF path
+          // gets the same treatment inside markdownToAdfDocument.
+          ...(body !== undefined && {
+            body: {
               representation,
-              // Storage bodies are sent verbatim, so unescape here; the ADF path
-              // gets the same treatment inside markdownToAdfDocument.
               value: isStorage ? unescapeNewlines(body) : JSON.stringify(markdownToAdfDocument(body)),
             },
+          }),
+          // The v2 update endpoint requires id and status in the body itself.
+          id: pageId,
+          status: (page as {status?: string}).status ?? 'current',
+          title,
+          version: {
+            number: currentVersion,
           },
-        }),
-        title,
-        version: {
-          number: currentVersion,
         },
+        id: asV2Id(pageId),
       })
 
       if (fields.fullWidth) {
@@ -666,14 +728,25 @@ export class ConniApi {
     return {
       bodyContent,
       contentPayload: {
-        ancestors: parentId ? [{id: parentId}] : undefined,
-        body: {storage: {representation, value: isStorage ? rawBody : JSON.stringify(bodyContent)}},
-        space: {key: spaceKey},
-        status,
+        body: {representation, value: isStorage ? rawBody : JSON.stringify(bodyContent)},
+        ...(parentId && {parentId}),
+        ...(status && {status}),
         title,
-        type: 'page',
       },
+      spaceKey,
     }
+  }
+
+  /** v2 creation endpoints take a numeric space id, so a profile's key resolves through getSpaces first. */
+  private async resolveSpaceId(spaceKey: string): Promise<string> {
+    const {v2} = this.getClient()
+    const response = await v2.space.getSpaces({keys: [spaceKey]})
+    const spaceId = (response as {results?: Array<{id?: string}>}).results?.[0]?.id
+    if (!spaceId) {
+      throw new Error(`Space not found: ${spaceKey}`)
+    }
+
+    return spaceId
   }
 
   private collectExternalMedia(

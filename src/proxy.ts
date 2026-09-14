@@ -1,29 +1,31 @@
-import {HttpsProxyAgent} from 'https-proxy-agent'
 import {getProxyForUrl} from 'proxy-from-env'
+import {EnvHttpProxyAgent, getGlobalDispatcher, setGlobalDispatcher} from 'undici'
 
 /**
- * axios (confluence.js's HTTP client) resolves HTTP(S)_PROXY env vars itself, but for
- * https:// targets it forwards a plain absolute-URI request instead of opening an
- * HTTP CONNECT tunnel — unlike fetch/undici. MITM-style proxies that require CONNECT
- * for https:// upstreams (e.g. Agent Vault) reject that with a 400. Building an
- * explicit httpsAgent that tunnels correctly, and disabling axios's own proxy
- * handling for the request, works around it.
+ * confluence.js's HTTP transport is the global fetch, which — unlike axios —
+ * ignores HTTP(S)_PROXY env vars entirely. MITM-style proxies that require
+ * CONNECT for https:// upstreams (e.g. Agent Vault) therefore receive no traffic
+ * at all unless a proxy-aware dispatcher is installed. EnvHttpProxyAgent honors
+ * HTTP_PROXY/HTTPS_PROXY/NO_PROXY per request and CONNECT-tunnels https
+ * targets, which is exactly the behavior the old axios httpsAgent workaround
+ * existed to provide.
  *
- * The workaround only applies to https:// targets. For http:// targets axios already
- * does the right thing (an absolute-URI request to the proxy), and it would consult
- * `httpAgent` rather than `httpsAgent` — so returning `proxy: false` there would
- * silently bypass the proxy instead of routing through it.
+ * The dispatcher is process-global: sdkck runs sibling plugins in the same
+ * process, so every fetch is routed through it once installed. EnvHttpProxyAgent
+ * only proxies requests whose env vars say so, and NO_PROXY keeps hosts
+ * opt-out safe, which makes the global side effect benign.
+ *
+ * The workaround only engages for https:// targets, mirroring the old guard:
+ * Confluence hosts are https, and skipping installation when no proxy applies
+ * leaves unrelated fetch traffic untouched.
  */
-export function buildProxyRequestConfig(host: string): undefined | {httpsAgent: HttpsProxyAgent<string>; proxy: false} {
-  if (!isHttpsTarget(host)) return undefined
+export function installProxyDispatcher(host: string): void {
+  if (!isHttpsTarget(host)) return
+  // getProxyForUrl returns '' (and undefined in odd cases) when no proxy applies.
+  if (!getProxyForUrl(host)) return
+  if (getGlobalDispatcher() instanceof EnvHttpProxyAgent) return
 
-  const proxyUrl = getProxyForUrl(host)
-  if (!proxyUrl) return undefined
-
-  return {
-    httpsAgent: new HttpsProxyAgent(proxyUrl),
-    proxy: false,
-  }
+  setGlobalDispatcher(new EnvHttpProxyAgent())
 }
 
 function isHttpsTarget(host: string): boolean {

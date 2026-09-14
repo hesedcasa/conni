@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {expect} from 'chai'
+import {ApiError, NotFoundError} from 'confluence.js'
 
 import {ConniApi} from '../../src/conni/conni-api.js'
 
@@ -26,6 +27,43 @@ describe('ConniApi', () => {
       expect(result).to.deep.equal({error: 'boom', success: false})
     })
 
+    describe('ApiError (confluence.js 3.x)', () => {
+      it('prefers the translated message from the error body', () => {
+        const error = new NotFoundError('Request failed: 404 Not Found - {"errors":[...]}', 'Not Found', {
+          errors: [{message: {args: [], translation: 'No content found with id : 999999999'}}],
+        })
+
+        expect((conniApi as any).toErrorResult(error)).to.deep.equal({
+          error: 'No content found with id : 999999999',
+          success: false,
+        })
+      })
+
+      it('joins multiple translated messages from the error body', () => {
+        const error = new ApiError('Request failed: 400 Bad Request - body', 400, 'Bad Request', {
+          errors: [{message: {translation: 'first problem'}}, {message: {translation: 'second problem'}}],
+        })
+
+        expect((conniApi as any).toErrorResult(error).error).to.equal('first problem; second problem')
+      })
+
+      it('falls back to v2-style error titles when there is no translation', () => {
+        const error = new ApiError('Request failed: 400 Bad Request - body', 400, 'Bad Request', {
+          errors: [{code: 'INVALID_SPACE_KEY', title: 'The space key is invalid'}],
+        })
+
+        expect((conniApi as any).toErrorResult(error).error).to.equal('The space key is invalid')
+      })
+
+      it('summarizes the status when the body carries no readable message', () => {
+        const error = new NotFoundError('Request failed: 404 Not Found - {"code":404}', 'Not Found', {
+          code: 404,
+        })
+
+        expect((conniApi as any).toErrorResult(error).error).to.equal('Confluence request failed with status 404')
+      })
+    })
+
     it('stringifies non-Error values without throwing', () => {
       expect((conniApi as any).toErrorResult('plain string')).to.deep.equal({
         error: 'plain string',
@@ -38,8 +76,10 @@ describe('ConniApi', () => {
       expect((conniApi as any).toErrorResult(null)).to.deep.equal({error: 'null', success: false})
     })
 
-    // confluence.js rejects with a plain object, not an Error, so `String(error)`
-    // used to reduce every API failure to the useless string '[object Object]'.
+    // confluence.js 2.x rejected with a plain object rather than an Error, so
+    // `String(error)` used to reduce every API failure to '[object Object]'. The
+    // object path below remains as the defensive/legacy shape; 3.x throws typed
+    // ApiError subclasses, covered by the cases after it.
     it('prefers the translated message of a confluence.js rejection', () => {
       const rejection = {
         data: {errors: [{message: {args: [], translation: 'No content found with id : 999999999'}}]},
@@ -169,13 +209,15 @@ describe('ConniApi', () => {
   })
 
   describe('getClient', () => {
-    it('returns a ConfluenceClient instance', () => {
+    it('returns v1 and v2 client views', () => {
       const client = conniApi.getClient()
-      expect(client).to.have.property('content')
-      expect(client).to.have.property('space')
+      expect(client).to.have.property('v1')
+      expect(client).to.have.property('v2')
+      expect(client.v1).to.have.property('content')
+      expect(client.v2).to.have.property('page')
     })
 
-    it('returns the same client instance on subsequent calls', () => {
+    it('returns the same client pair on subsequent calls', () => {
       const client1 = conniApi.getClient()
       const client2 = conniApi.getClient()
       expect(client1).to.equal(client2)
@@ -243,6 +285,26 @@ describe('ConniApi', () => {
         // Expected to fail without actual connection
       }
     })
+
+    it('reports a missing space when the key resolves to nothing', async () => {
+      const stubClient = {
+        v1: {},
+        v2: {
+          space: {
+            async getSpaces() {
+              return {results: []}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.createPage({body: 'Content', spaceKey: 'BOGUS', title: 'Test'})
+
+      expect(result.success).to.equal(false)
+      expect(result.error).to.equal('Space not found: BOGUS')
+    })
   })
 
   describe('updateContent', () => {
@@ -262,13 +324,16 @@ describe('ConniApi', () => {
     it('unescapes literal backslash-n in storage bodies, matching page creation', async () => {
       let sentValue: string | undefined
       const stubClient = {
-        content: {
-          async getContentById() {
-            return {title: 'Existing', version: {number: 1}}
-          },
-          async updateContent(payload: {body: {storage: {value: string}}}) {
-            sentValue = payload.body.storage.value
-            return {id: '123456'}
+        v1: {},
+        v2: {
+          page: {
+            async getPageById() {
+              return {title: 'Existing', version: {number: 1}}
+            },
+            async updatePage(payload: {body: {body?: {value?: string}}}) {
+              sentValue = payload.body.body?.value
+              return {id: '123456'}
+            },
           },
         },
       }
