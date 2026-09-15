@@ -32,22 +32,35 @@ function asV2Id(id: string): number {
 function errorBodyMessages(body: unknown): string[] {
   if (typeof body !== 'object' || body === null) return []
 
-  const {errors} = body as {errors?: unknown}
-  if (!Array.isArray(errors)) return []
-
   const messages: string[] = []
-  for (const entry of errors) {
-    if (typeof entry !== 'object' || entry === null) continue
 
-    const translation = (entry as {message?: {translation?: unknown}}).message?.translation
-    if (typeof translation === 'string' && translation !== '') {
-      messages.push(translation)
-      continue
+  const {errors} = body as {errors?: unknown}
+  if (Array.isArray(errors)) {
+    for (const entry of errors) {
+      if (typeof entry !== 'object' || entry === null) continue
+
+      const translation = (entry as {message?: {translation?: unknown}}).message?.translation
+      if (typeof translation === 'string' && translation !== '') {
+        messages.push(translation)
+        continue
+      }
+
+      // Some endpoints report `{code, title}` instead of a translated message.
+      const {title} = entry as {title?: unknown}
+      if (typeof title === 'string' && title !== '') messages.push(title)
     }
+  }
 
-    // v2 endpoints report `{code, title}` instead of a translated message.
-    const {title} = entry as {title?: unknown}
-    if (typeof title === 'string' && title !== '') messages.push(title)
+  // Others answer with the human text behind a java exception class name in a
+  // top-level `message` — the 'Could not parse cql' of a malformed query, the
+  // 'same file name' of a duplicate attachment.
+  const {message} = body as {message?: unknown}
+  if (typeof message === 'string') {
+    const stripped = message.replace(JAVA_EXCEPTION_PREFIX, '').trim()
+
+    // Confluence sometimes reports nothing useful, e.g. a bad attachment id
+    // comes back as 'NotFoundException: null'; silence beats echoing 'null'.
+    if (stripped !== '' && stripped !== 'null') messages.push(stripped)
   }
 
   return messages
@@ -58,18 +71,21 @@ function errorBodyMessages(body: unknown): string[] {
  *
  * confluence.js 3.x throws typed `ApiError` subclasses (of `Error`) whose
  * `message` embeds the raw response body, so prefer the parsed `body`'s
- * Confluence-translated messages and fall back to a status summary. Non-Error
- * values (defensive, and the shape older confluence.js versions rejected with)
- * still reduce to their message rather than '[object Object]'.
+ * Confluence-reported messages, always prefixed with the HTTP status, which
+ * callers branch on where they cannot trust Confluence's (translated) prose.
+ * Non-Error values (defensive, and the shape older confluence.js versions
+ * rejected with) still reduce to their message rather than '[object Object]'.
  */
 function toErrorMessage(error: unknown): string {
   if (isApiError(error)) {
+    const summary = `Confluence request failed with status ${error.status}`
+
     const messages = errorBodyMessages(error.body)
     if (messages.length > 0) {
-      return messages.join('; ')
+      return `${summary}: ${messages.join('; ')}`
     }
 
-    return `Confluence request failed with status ${error.status}`
+    return summary
   }
 
   if (error instanceof Error) {
@@ -442,20 +458,45 @@ export class ConniApi {
   }
 
   /**
-   * Get page details
+   * Get content details by id — a page, or a comment when the id is one.
+   *
+   * Comments answer on their own endpoint: the pages one 404s a comment id, so
+   * a 404 retries as a footer comment before giving up.
    */
   async getContent(pageId: string): Promise<ApiResult> {
     try {
       const {v2} = this.getClient()
-      const page = await v2.page.getPageById({
-        bodyFormat: 'storage',
-        id: asV2Id(pageId),
-        includeVersion: true,
-      })
+      try {
+        const page = await v2.page.getPageById({
+          bodyFormat: 'storage',
+          id: asV2Id(pageId),
+          includeVersion: true,
+        })
 
-      return {
-        data: page,
-        success: true,
+        return {
+          data: page,
+          success: true,
+        }
+      } catch (pageError: unknown) {
+        if (!isApiError(pageError) || pageError.status !== 404) throw pageError
+
+        try {
+          const comment = await v2.comment.getFooterCommentById({
+            bodyFormat: 'storage',
+            commentId: asV2Id(pageId),
+            includeVersion: true,
+          })
+
+          return {
+            data: comment,
+            success: true,
+          }
+        } catch (commentError: unknown) {
+          // Neither endpoint knows the id. The page 404 is the neutral failure to
+          // report; anything other than another 404 from the comment endpoint is
+          // new information worth surfacing instead.
+          throw isApiError(commentError) && commentError.status === 404 ? pageError : commentError
+        }
       }
     } catch (error: unknown) {
       return this.toErrorResult(error)

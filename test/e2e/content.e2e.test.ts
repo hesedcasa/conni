@@ -88,12 +88,14 @@ describe('e2e: content conversion, comments and labels', () => {
   })
 
   it('adds, updates and deletes a comment', async () => {
-    const added = await runCliJson<{data: {id: string; type: string}; success: boolean}>(
+    const added = await runCliJson<{data: {id: string; pageId: string}; success: boolean}>(
       ['conni', 'content', 'comment', pageId, 'first line\nsecond line'],
       configDir,
     )
     expect(added.success).to.be.true
-    expect(added.data.type).to.equal('comment')
+    // The comment response carries no `type` field; pageId is what identifies
+    // the created thing as a comment on this page.
+    expect(added.data.pageId).to.equal(pageId)
     const commentId = added.data.id
     expect(isNumericId(commentId), `expected a numeric comment id, got ${commentId}`).to.be.true
 

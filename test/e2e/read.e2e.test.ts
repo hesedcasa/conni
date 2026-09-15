@@ -11,7 +11,7 @@ import {
   runCliJson,
 } from './helpers.js'
 
-type Page = {id: string; title: string; type: string}
+type Page = {id: string; title: string}
 type SearchResults = {limit: number; results: Page[]; size: number; start: number}
 type Space = {key: string; name: string; type: string}
 
@@ -59,7 +59,8 @@ describe('e2e: read operations', () => {
     expect(payload.success).to.be.true
     expect(payload.data.id).to.equal(pageId)
     expect(payload.data.title).to.equal(pageTitle)
-    expect(payload.data.type).to.equal('page')
+    // No `type` assertion: the pages response carries no type field — id and
+    // title are the identity proof.
   })
 
   it('finds the fixture through CQL', async () => {
