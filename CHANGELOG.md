@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2](https://github.com/hesedcasa/conni/compare/v0.11.1...v0.11.2) (2026-09-15)
+
+
+### 🛠️ Fixes
+
+* restore error detail and comment reads after confluence.js 3.x migration ([#133](https://github.com/hesedcasa/conni/issues/133)) ([8ba7bb5](https://github.com/hesedcasa/conni/commit/8ba7bb5f80b58c354eee8e06f411542cf4cef032))
+
 ## [0.11.1](https://github.com/hesedcasa/conni/compare/v0.11.0...v0.11.1) (2026-09-03)
 
 
