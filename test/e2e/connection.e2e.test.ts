@@ -48,7 +48,10 @@ describe('e2e: connection', () => {
     const payload = JSON.parse(stdout) as Failure
     expect(payload.success).to.be.false
     // The status code, not the prose around it — Confluence translates messages.
-    expect(payload.error).to.contain('403')
+    // 404, not 401/403: Atlassian answers bad credentials with 404, deliberately
+    // hiding whether the site exists at all. toErrorMessage keeps the status in
+    // the message.
+    expect(payload.error).to.contain('404')
   })
 
   it('fails with exit 1 when the profile does not exist', async () => {

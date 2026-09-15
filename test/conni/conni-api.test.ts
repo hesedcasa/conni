@@ -28,13 +28,16 @@ describe('ConniApi', () => {
     })
 
     describe('ApiError (confluence.js 3.x)', () => {
+      // Every message keeps the status in front: the e2e suite (and shell
+      // callers) branch on the HTTP status substring, not on prose Confluence
+      // may translate.
       it('prefers the translated message from the error body', () => {
         const error = new NotFoundError('Request failed: 404 Not Found - {"errors":[...]}', 'Not Found', {
           errors: [{message: {args: [], translation: 'No content found with id : 999999999'}}],
         })
 
         expect((conniApi as any).toErrorResult(error)).to.deep.equal({
-          error: 'No content found with id : 999999999',
+          error: 'Confluence request failed with status 404: No content found with id : 999999999',
           success: false,
         })
       })
@@ -44,7 +47,9 @@ describe('ConniApi', () => {
           errors: [{message: {translation: 'first problem'}}, {message: {translation: 'second problem'}}],
         })
 
-        expect((conniApi as any).toErrorResult(error).error).to.equal('first problem; second problem')
+        expect((conniApi as any).toErrorResult(error).error).to.equal(
+          'Confluence request failed with status 400: first problem; second problem',
+        )
       })
 
       it('falls back to v2-style error titles when there is no translation', () => {
@@ -52,7 +57,34 @@ describe('ConniApi', () => {
           errors: [{code: 'INVALID_SPACE_KEY', title: 'The space key is invalid'}],
         })
 
-        expect((conniApi as any).toErrorResult(error).error).to.equal('The space key is invalid')
+        expect((conniApi as any).toErrorResult(error).error).to.equal(
+          'Confluence request failed with status 400: The space key is invalid',
+        )
+      })
+
+      // Some endpoints answer with the human message at the top level, prefixed
+      // by the java exception class — not inside an errors[] array. This is the
+      // shape CQL parse errors and duplicate-attachment rejections arrive in.
+      it('reads the top-level message of an error body, stripping the java prefix', () => {
+        const error = new ApiError('Request failed: 400 Bad Request - body', 400, 'Bad Request', {
+          data: {authorized: true, errors: [], successful: true},
+          message:
+            'com.atlassian.confluence.api.service.exceptions.api.BadRequestException: Could not parse cql : ',
+          statusCode: 400,
+        })
+
+        expect((conniApi as any).toErrorResult(error).error).to.equal(
+          'Confluence request failed with status 400: Could not parse cql :',
+        )
+      })
+
+      it('ignores a top-level body message that carries no information', () => {
+        const error = new NotFoundError('Request failed: 404 Not Found - body', 'Not Found', {
+          message: 'com.atlassian.confluence.api.service.exceptions.api.NotFoundException: null',
+          statusCode: 404,
+        })
+
+        expect((conniApi as any).toErrorResult(error).error).to.equal('Confluence request failed with status 404')
       })
 
       it('summarizes the status when the body carries no readable message', () => {
@@ -269,6 +301,111 @@ describe('ConniApi', () => {
       } catch {
         // Expected to fail without actual connection
       }
+    })
+
+    it('reads a comment id through the comment endpoint when the page one 404s', async () => {
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentById() {
+              return {body: {storage: {value: '<p>hi</p>'}}, id: '10001', pageId: '123456'}
+            },
+          },
+          page: {
+            async getPageById() {
+              throw new ApiError('Request failed: 404 Not Found - body', 404, 'Not Found', {})
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getContent('10001')
+
+      expect(result.success).to.equal(true)
+      expect(result.data).to.deep.equal({body: {storage: {value: '<p>hi</p>'}}, id: '10001', pageId: '123456'})
+    })
+
+    it('does not try the comment endpoint when the page read fails for another reason', async () => {
+      let commentEndpointCalled = false
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentById() {
+              commentEndpointCalled = true
+              return {id: '10001'}
+            },
+          },
+          page: {
+            async getPageById() {
+              throw new ApiError('Request failed: 403 Forbidden - body', 403, 'Forbidden', {})
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getContent('123456')
+
+      expect(result.success).to.equal(false)
+      expect(result.error).to.equal('Confluence request failed with status 403')
+      expect(commentEndpointCalled).to.equal(false)
+    })
+
+    it('reports the neutral page 404 when neither endpoint knows the id', async () => {
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentById() {
+              throw new NotFoundError('Request failed: 404 Not Found - body', 'Not Found', {})
+            },
+          },
+          page: {
+            async getPageById() {
+              throw new NotFoundError('Request failed: 404 Not Found - body', 'Not Found', {
+                errors: [{message: {args: [], translation: 'No content found with id : 999999999'}}],
+              })
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getContent('999999999')
+
+      expect(result.success).to.equal(false)
+      expect(result.error).to.equal('Confluence request failed with status 404: No content found with id : 999999999')
+    })
+
+    it('surfaces a comment endpoint failure that is not another 404', async () => {
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentById() {
+              throw new ApiError('Request failed: 500 Internal Server Error - body', 500, 'Internal Server Error', {})
+            },
+          },
+          page: {
+            async getPageById() {
+              throw new ApiError('Request failed: 404 Not Found - body', 404, 'Not Found', {})
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getContent('123456')
+
+      expect(result.success).to.equal(false)
+      expect(result.error).to.equal('Confluence request failed with status 500')
     })
   })
 
