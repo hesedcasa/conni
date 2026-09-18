@@ -168,9 +168,7 @@ static override args = {
 
 ### End-to-end tests
 
-`test/e2e/**` runs the built `bin/run.js` as a real subprocess against the live
-Confluence sandbox. It is excluded from `npm test` and needs credentials
-exported first, because nothing in this repo loads `.env`:
+`test/e2e/**` runs the built `bin/run.js` as a real subprocess against the live Confluence sandbox. `npm run test:e2e` then reruns the same suite through the latest sdkck host CLI with the current build packed and installed as its plugin — the host switch (`E2E_HOST_CLI=sdkck` + `E2E_SDKCK_HOME`, set by `scripts/e2e.sh` and the CI workflow) lives in `test/e2e/helpers.ts`; the plugin must be installed before any `sdkck conni` call, or sdkck auto-installs the published release, and the tarball must be a `file:` URL (bare paths read as GitHub org/repo). It is excluded from `npm test` and needs credentials exported first, because nothing in this repo loads `.env`:
 
 ```bash
 set -a; . ./.env; set +a
@@ -180,53 +178,21 @@ npm run e2e:mocha             # run without rebuilding
 npm run e2e:sweep             # reclaim stale fixtures and purge the trash
 ```
 
-`e2e:sweep` also deletes the _current_ run's fixtures when `E2E_RUN_ID` is set
-— `scripts/e2e.sh` and the CI workflow both set it, so a mocha killed before
-its `after` hooks ran (a job timeout, a local Ctrl-C) still gets cleaned up
-instead of waiting an hour for the stale sweep to reach it.
+`e2e:sweep` also deletes the _current_ run's fixtures when `E2E_RUN_ID` is set — `scripts/e2e.sh` and the CI workflow both set it, so a mocha killed before its `after` hooks ran (a job timeout, a local Ctrl-C) still gets cleaned up instead of waiting an hour for the stale sweep to reach it.
 
 Rules specific to this suite:
 
-- **Never pass `--json`.** JSON is already the default (`BaseCommand.jsonEnabled()`);
-  `--json` is not a declared flag and the command will fail to parse.
-- **Know which exit code to expect.** An `ApiResult` failure exits **0** with
-  `{error, success: false}` — `ConniApi` never throws, so oclif sees a
-  successful command. Only `this.error(...)` paths exit non-zero: a missing
-  profile exits 1, and plugin-lib's `auth test` exits 2. Assert on `success`,
-  not on `$?`, unless the path is one of those two.
-- **Never assert on error message text.** Confluence translates its messages.
-  Assert on exit codes, `success`, and the HTTP status substring.
-- **Fixtures are created with raw `fetch` in `test/e2e/fixtures.ts`, never
-  through the CLI** — they are the oracle the CLI is checked against.
-- **Quote every CQL value.** An unquoted `space=Sidekick` is a parse error that
-  comes back with no `size` field at all, which reads as "nothing matched".
-- **The CQL index is eventually consistent _and_ not monotonic.** A page was
-  observed appearing at t+2s, absent again at t+4s, and stable only from t+5s.
-  So `waitForIndexed` takes explicit page ids (a count is satisfied by the
-  wrong page — every fixture shares the run label with its parent) and requires
-  three consecutive confirming polls. Assertions against the CLI's own search
-  wrap in `eventually(...)` rather than trusting a single lookup.
-- **A suite that makes CQL assertions needs its own label.** Pass one as
-  `seedPage`'s second argument: the shared run label is deleted out from under
-  it by every other suite's `cleanupRun`, and racing those deletions through
-  the index is the flakiest thing here.
-- **Purge, don't just trash.** Confluence's delete is two-phase, and
-  `conni content delete` only performs the first. Tests that create a page
-  through the CLI must call `trackPage` on the id it returns — immediately,
-  before any assertion can fail — which records it for `cleanupRun` and stamps
-  the fixture labels onto it; then purge with `deletePage` on the way out.
-  `purgeTrashedFixtures` is the backstop, and it purges a trashed page only
-  when the label can be read back through the v2 pages API: v1 strips labels
-  (and 404s content properties) from trashed content, so the title alone
-  proves nothing and must never be the reason a page gets purged.
-- **No regex literals in `test/**`.** `require-unicode-regexp` demands the `v`
-  flag, which needs TS target `es2024` while this repo targets `es2022`, so
-  eslint and tsc contradict each other. Use string methods — `isNumericId` in
-  `helpers.ts` is the example.
+- **Never pass `--json`.** JSON is already the default (`BaseCommand.jsonEnabled()`); `--json` is not a declared flag and the command will fail to parse.
+- **Know which exit code to expect.** An `ApiResult` failure exits **0** with `{error, success: false}` — `ConniApi` never throws, so oclif sees a successful command. Only `this.error(...)` paths exit non-zero: a missing profile exits 1, and plugin-lib's `auth test` exits 2. Assert on `success`, not on `$?`, unless the path is one of those two.
+- **Never assert on error message text.** Confluence translates its messages. Assert on exit codes, `success`, and the HTTP status substring.
+- **Fixtures are created with raw `fetch` in `test/e2e/fixtures.ts`, never through the CLI** — they are the oracle the CLI is checked against.
+- **Quote every CQL value.** An unquoted `space=Sidekick` is a parse error that comes back with no `size` field at all, which reads as "nothing matched".
+- **The CQL index is eventually consistent _and_ not monotonic.** A page was observed appearing at t+2s, absent again at t+4s, and stable only from t+5s. So `waitForIndexed` takes explicit page ids (a count is satisfied by the wrong page — every fixture shares the run label with its parent) and requires three consecutive confirming polls. Assertions against the CLI's own search wrap in `eventually(...)` rather than trusting a single lookup.
+- **A suite that makes CQL assertions needs its own label.** Pass one as `seedPage`'s second argument: the shared run label is deleted out from under it by every other suite's `cleanupRun`, and racing those deletions through the index is the flakiest thing here.
+- **Purge, don't just trash.** Confluence's delete is two-phase, and `conni content delete` only performs the first. Tests that create a page through the CLI must call `trackPage` on the id it returns — immediately, before any assertion can fail — which records it for `cleanupRun` and stamps the fixture labels onto it; then purge with `deletePage` on the way out. `purgeTrashedFixtures` is the backstop, and it purges a trashed page only when the label can be read back through the v2 pages API: v1 strips labels (and 404s content properties) from trashed content, so the title alone proves nothing and must never be the reason a page gets purged.
+- **No regex literals in `test/**`.** `require-unicode-regexp` demands the `v` flag, which needs TS target `es2024` while this repo targets `es2022`, so eslint and tsc contradict each other. Use string methods — `isNumericId` in `helpers.ts` is the example.
 
-Fixtures live in the `Sidekick` space, nested under a per-run parent page. Its
-four template pages are not in the CQL index, so a space-scoped search only ever
-sees what this suite created.
+Fixtures live in the `Sidekick` space, nested under a per-run parent page. Its four template pages are not in the CQL index, so a space-scoped search only ever sees what this suite created.
 
 ## Configuration
 

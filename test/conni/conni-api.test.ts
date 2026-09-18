@@ -68,8 +68,7 @@ describe('ConniApi', () => {
       it('reads the top-level message of an error body, stripping the java prefix', () => {
         const error = new ApiError('Request failed: 400 Bad Request - body', 400, 'Bad Request', {
           data: {authorized: true, errors: [], successful: true},
-          message:
-            'com.atlassian.confluence.api.service.exceptions.api.BadRequestException: Could not parse cql : ',
+          message: 'com.atlassian.confluence.api.service.exceptions.api.BadRequestException: Could not parse cql : ',
           statusCode: 400,
         })
 
