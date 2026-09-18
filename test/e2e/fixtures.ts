@@ -336,20 +336,29 @@ export async function deletePage(id: string): Promise<void> {
  * Deletes every page in `ids`, tolerating individual failures until all
  * deletions have been attempted, then throwing if any actually failed.
  *
- * Promise.all would abandon the remaining deletions on the first rejection;
- * allSettled ensures a single stuck page never masks failures to delete the
- * rest.
+ * Sequential, not Promise.allSettled: trashing a page moves its whole subtree
+ * to trash, and a child's own trash call issued while that move is in flight
+ * fails to acquire the page move lock the parent's move holds — 409 "Failed to
+ * acquire page move lock within 7 SECONDS", observed intermittently since the
+ * sandbox began enforcing the lock. In sequence the first trash completes and
+ * every stranded descendant afterwards is simply already gone, which
+ * trashPage and deletePage both tolerate. Each deletion is still attempted
+ * even after one fails, so a single stuck page never masks the rest.
  *
  * @param ids The page ids to delete.
  * @throws {Error} If any deletion failed.
  */
 async function deleteAll(ids: string[]): Promise<void> {
-  const results = await Promise.allSettled(ids.map((id) => deletePage(id)))
-  const failures = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+  const failures: string[] = []
+  for (const id of ids) {
+    // eslint-disable-next-line no-await-in-loop
+    await deletePage(id).catch((error: unknown) => {
+      failures.push(`${id}: ${String(error)}`)
+    })
+  }
+
   if (failures.length > 0) {
-    throw new Error(
-      `deleteAll: ${failures.length}/${ids.length} deletion(s) failed: ${failures.map((f) => String(f.reason)).join('; ')}`,
-    )
+    throw new Error(`deleteAll: ${failures.length}/${ids.length} deletion(s) failed: ${failures.join('; ')}`)
   }
 }
 

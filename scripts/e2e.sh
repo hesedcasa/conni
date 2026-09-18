@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Runs the end-to-end suite against the live Confluence sandbox.
+# Runs the end-to-end suite against the live Confluence sandbox — twice: once
+# through the built standalone CLI, then again through the latest sdkck host
+# CLI with this build packed and installed as its @hesed/conni plugin.
 #
 # Nothing in this repo loads .env, so export the credentials first:
 #
@@ -47,8 +49,18 @@ export E2E_RUN_ID
 # fixtures in the shared sandbox, so it must not be swallowed: it surfaces as a
 # non-zero exit unless the tests already failed, in which case that status is
 # the more useful one to keep.
+# The throwaway sdkck home this script creates, if it got that far. Deliberately
+# NOT named SDKCK_HOME: an inherited SDKCK_HOME could point at the developer's
+# real sdkck setup, and the EXIT trap must never rm -rf that. This variable only
+# ever holds a path this script itself mktemp'd.
+SDKCK_E2E_HOME=""
+
 cleanup() {
   local status=$?
+
+  if [ -n "$SDKCK_E2E_HOME" ]; then
+    rm -rf "$SDKCK_E2E_HOME"
+  fi
 
   if [ "$KEEP" -ne 0 ]; then
     echo "==> Leaving fixtures in place (--keep); clean up later with: npm run e2e:sweep"
@@ -69,11 +81,65 @@ cleanup() {
 }
 trap cleanup EXIT
 
+run_mocha() {
+  # Delegates to the `e2e:mocha` script rather than calling mocha directly, so
+  # both entry points share one glob and one timeout.
+  # The +expansion guard keeps `set -u` happy with an empty array on bash 3.2.
+  npm run --silent e2e:mocha -- ${MOCHA_ARGS[@]+"${MOCHA_ARGS[@]}"}
+}
+
+# Records the first failing leg's status. A later leg failing with a different
+# status must not overwrite an earlier failure: the script's contract is to
+# exit with the first failure it saw.
+record_failure() {
+  local leg_status=$?
+  [ "$EXIT_STATUS" -ne 0 ] || EXIT_STATUS=$leg_status
+}
+
 echo "==> Building the CLI"
 npm run build
 
+EXIT_STATUS=0
+
 echo "==> Running end-to-end tests against ${ATLASSIAN_URL}"
-# Delegates to the `e2e:mocha` script rather than calling mocha directly, so
-# both entry points share one glob and one timeout.
-# The +expansion guard keeps `set -u` happy with an empty array on bash 3.2.
-npm run --silent e2e:mocha -- ${MOCHA_ARGS[@]+"${MOCHA_ARGS[@]}"}
+# Both legs always run: a standalone-leg failure says nothing about the packed
+# plugin, and vice versa. The `|| record_failure` form keeps `set -e` from
+# aborting so the sdkck leg still executes; the first failure becomes the exit
+# code.
+run_mocha || record_failure
+
+# Second leg: the same suite through the sdkck host CLI, with this build
+# installed as its @hesed/conni plugin.
+echo "==> Downloading the latest sdkck"
+# --no-save resolves "latest" from the registry on every run without touching
+# package.json; the binary comes from node_modules/.bin.
+npm install --silent --no-save sdkck
+export PATH="$PWD/node_modules/.bin:$PATH"
+
+# A throwaway sdkck home keeps the plugin install, its config and its caches
+# out of the developer's real sdkck setup; the test side finds it via
+# E2E_SDKCK_HOME.
+SDKCK_E2E_HOME="$(mktemp -d)"
+export E2E_SDKCK_HOME="$SDKCK_E2E_HOME"
+
+echo "==> Packing the current build and installing it as an sdkck plugin"
+# npm pack runs `prepack`, regenerating oclif.manifest.json and the README —
+# the same artifacts the publish workflow ships — so the sdkck leg exercises
+# the real install artifact, not just the working tree. Packing straight into
+# the throwaway home keeps the tarball out of the repo root; the EXIT trap
+# removes it with the rest of the home.
+TGZ="$(npm pack --pack-destination "$SDKCK_E2E_HOME" | tail -n 1)"
+
+# Installing here — before any `sdkck conni` invocation — stops sdkck's
+# first-use auto-installer from pulling the published @hesed/conni release over
+# the build under test. The tarball must be passed as a `file:` URL: sdkck
+# resolves any bare path containing a slash as a GitHub org/repo.
+SDKCK_CACHE_DIR="$SDKCK_E2E_HOME/cache" \
+SDKCK_CONFIG_DIR="$SDKCK_E2E_HOME/config" \
+SDKCK_DATA_DIR="$SDKCK_E2E_HOME/data" \
+  sdkck plugins install "file:$SDKCK_E2E_HOME/$TGZ"
+
+echo "==> Running end-to-end tests via sdkck"
+E2E_HOST_CLI=sdkck run_mocha || record_failure
+
+exit "$EXIT_STATUS"
