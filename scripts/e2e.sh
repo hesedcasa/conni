@@ -88,6 +88,14 @@ run_mocha() {
   npm run --silent e2e:mocha -- ${MOCHA_ARGS[@]+"${MOCHA_ARGS[@]}"}
 }
 
+# Records the first failing leg's status. A later leg failing with a different
+# status must not overwrite an earlier failure: the script's contract is to
+# exit with the first failure it saw.
+record_failure() {
+  local leg_status=$?
+  [ "$EXIT_STATUS" -ne 0 ] || EXIT_STATUS=$leg_status
+}
+
 echo "==> Building the CLI"
 npm run build
 
@@ -95,9 +103,10 @@ EXIT_STATUS=0
 
 echo "==> Running end-to-end tests against ${ATLASSIAN_URL}"
 # Both legs always run: a standalone-leg failure says nothing about the packed
-# plugin, and vice versa. `|| EXIT_STATUS=$?` keeps `set -e` from aborting so
-# the sdkck leg still executes; the first failure becomes the exit code.
-run_mocha || EXIT_STATUS=$?
+# plugin, and vice versa. The `|| record_failure` form keeps `set -e` from
+# aborting so the sdkck leg still executes; the first failure becomes the exit
+# code.
+run_mocha || record_failure
 
 # Second leg: the same suite through the sdkck host CLI, with this build
 # installed as its @hesed/conni plugin.
@@ -131,6 +140,6 @@ SDKCK_DATA_DIR="$SDKCK_E2E_HOME/data" \
   sdkck plugins install "file:$SDKCK_E2E_HOME/$TGZ"
 
 echo "==> Running end-to-end tests via sdkck"
-E2E_HOST_CLI=sdkck run_mocha || EXIT_STATUS=$?
+E2E_HOST_CLI=sdkck run_mocha || record_failure
 
 exit "$EXIT_STATUS"
