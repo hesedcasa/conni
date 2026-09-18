@@ -49,11 +49,17 @@ export E2E_RUN_ID
 # fixtures in the shared sandbox, so it must not be swallowed: it surfaces as a
 # non-zero exit unless the tests already failed, in which case that status is
 # the more useful one to keep.
+# The throwaway sdkck home this script creates, if it got that far. Deliberately
+# NOT named SDKCK_HOME: an inherited SDKCK_HOME could point at the developer's
+# real sdkck setup, and the EXIT trap must never rm -rf that. This variable only
+# ever holds a path this script itself mktemp'd.
+SDKCK_E2E_HOME=""
+
 cleanup() {
   local status=$?
 
-  if [ -n "${SDKCK_HOME:-}" ]; then
-    rm -rf "$SDKCK_HOME"
+  if [ -n "$SDKCK_E2E_HOME" ]; then
+    rm -rf "$SDKCK_E2E_HOME"
   fi
 
   if [ "$KEEP" -ne 0 ]; then
@@ -85,8 +91,13 @@ run_mocha() {
 echo "==> Building the CLI"
 npm run build
 
+EXIT_STATUS=0
+
 echo "==> Running end-to-end tests against ${ATLASSIAN_URL}"
-run_mocha
+# Both legs always run: a standalone-leg failure says nothing about the packed
+# plugin, and vice versa. `|| EXIT_STATUS=$?` keeps `set -e` from aborting so
+# the sdkck leg still executes; the first failure becomes the exit code.
+run_mocha || EXIT_STATUS=$?
 
 # Second leg: the same suite through the sdkck host CLI, with this build
 # installed as its @hesed/conni plugin.
@@ -99,8 +110,8 @@ export PATH="$PWD/node_modules/.bin:$PATH"
 # A throwaway sdkck home keeps the plugin install, its config and its caches
 # out of the developer's real sdkck setup; the test side finds it via
 # E2E_SDKCK_HOME.
-SDKCK_HOME="$(mktemp -d)"
-export E2E_SDKCK_HOME="$SDKCK_HOME"
+SDKCK_E2E_HOME="$(mktemp -d)"
+export E2E_SDKCK_HOME="$SDKCK_E2E_HOME"
 
 echo "==> Packing the current build and installing it as an sdkck plugin"
 # npm pack runs `prepack`, regenerating oclif.manifest.json and the README —
@@ -108,16 +119,18 @@ echo "==> Packing the current build and installing it as an sdkck plugin"
 # the real install artifact, not just the working tree. Packing straight into
 # the throwaway home keeps the tarball out of the repo root; the EXIT trap
 # removes it with the rest of the home.
-TGZ="$(npm pack --pack-destination "$SDKCK_HOME" | tail -n 1)"
+TGZ="$(npm pack --pack-destination "$SDKCK_E2E_HOME" | tail -n 1)"
 
 # Installing here — before any `sdkck conni` invocation — stops sdkck's
 # first-use auto-installer from pulling the published @hesed/conni release over
 # the build under test. The tarball must be passed as a `file:` URL: sdkck
 # resolves any bare path containing a slash as a GitHub org/repo.
-SDKCK_CACHE_DIR="$SDKCK_HOME/cache" \
-SDKCK_CONFIG_DIR="$SDKCK_HOME/config" \
-SDKCK_DATA_DIR="$SDKCK_HOME/data" \
-  sdkck plugins install "file:$SDKCK_HOME/$TGZ"
+SDKCK_CACHE_DIR="$SDKCK_E2E_HOME/cache" \
+SDKCK_CONFIG_DIR="$SDKCK_E2E_HOME/config" \
+SDKCK_DATA_DIR="$SDKCK_E2E_HOME/data" \
+  sdkck plugins install "file:$SDKCK_E2E_HOME/$TGZ"
 
 echo "==> Running end-to-end tests via sdkck"
-E2E_HOST_CLI=sdkck run_mocha
+E2E_HOST_CLI=sdkck run_mocha || EXIT_STATUS=$?
+
+exit "$EXIT_STATUS"
