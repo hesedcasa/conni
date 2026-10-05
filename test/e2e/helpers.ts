@@ -36,7 +36,7 @@ export type CliResult = {
 /**
  * Reads the sandbox credentials from the environment.
  *
- * Nothing in this repo loads .env, so these must already be exported.
+ * They come from Infisical, so run under `infisical run --`.
  *
  * @returns The host, email and API token.
  * @throws {Error} If any of the three variables is missing.
@@ -49,7 +49,7 @@ export function requireEnv(): {apiToken: string; email: string; host: string} {
   if (!apiToken || !email || !host) {
     throw new Error(
       'Missing ATLASSIAN_URL, ATLASSIAN_EMAIL or ATLASSIAN_API_TOKEN. ' +
-        'Nothing in this repo loads .env — run: set -a; . ./.env; set +a',
+        'Run under Infisical: infisical run -- npm run test:e2e',
     )
   }
 
