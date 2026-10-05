@@ -124,7 +124,9 @@ record_failure() {
 }
 
 echo "==> Building the CLI"
-npm run build
+# The build and the pack below run repository and dependency scripts that never
+# need the credentials, so they are stripped there as for the sdkck installs.
+env -u ATLASSIAN_URL -u ATLASSIAN_EMAIL -u ATLASSIAN_API_TOKEN npm run build
 
 EXIT_STATUS=0
 
@@ -139,8 +141,11 @@ run_mocha || record_failure
 # installed as its @hesed/conni plugin.
 echo "==> Downloading the latest sdkck"
 # --no-save resolves "latest" from the registry on every run without touching
-# package.json; the binary comes from node_modules/.bin.
-npm install --silent --no-save sdkck
+# package.json; the binary comes from node_modules/.bin. The install runs with
+# the credentials stripped from the environment: a lifecycle script of the
+# freshly fetched package is arbitrary code from a mutable release, and never
+# needs them.
+env -u ATLASSIAN_URL -u ATLASSIAN_EMAIL -u ATLASSIAN_API_TOKEN npm install --silent --no-save sdkck
 export PATH="$PWD/node_modules/.bin:$PATH"
 
 # A throwaway sdkck home keeps the plugin install, its config and its caches
@@ -155,15 +160,19 @@ echo "==> Packing the current build and installing it as an sdkck plugin"
 # the real install artifact, not just the working tree. Packing straight into
 # the throwaway home keeps the tarball out of the repo root; the EXIT trap
 # removes it with the rest of the home.
-TGZ="$(npm pack --pack-destination "$SDKCK_E2E_HOME" | tail -n 1)"
+TGZ="$(env -u ATLASSIAN_URL -u ATLASSIAN_EMAIL -u ATLASSIAN_API_TOKEN \
+  npm pack --pack-destination "$SDKCK_E2E_HOME" | tail -n 1)"
 
 # Installing here — before any `sdkck conni` invocation — stops sdkck's
 # first-use auto-installer from pulling the published @hesed/conni release over
 # the build under test. The tarball must be passed as a `file:` URL: sdkck
 # resolves any bare path containing a slash as a GitHub org/repo.
-SDKCK_CACHE_DIR="$SDKCK_E2E_HOME/cache" \
-SDKCK_CONFIG_DIR="$SDKCK_E2E_HOME/config" \
-SDKCK_DATA_DIR="$SDKCK_E2E_HOME/data" \
+# Credentials are stripped here too: the install handles a local tarball and
+# needs none, so the mocha legs are the only steps that hold them under sdkck.
+env -u ATLASSIAN_URL -u ATLASSIAN_EMAIL -u ATLASSIAN_API_TOKEN \
+  SDKCK_CACHE_DIR="$SDKCK_E2E_HOME/cache" \
+  SDKCK_CONFIG_DIR="$SDKCK_E2E_HOME/config" \
+  SDKCK_DATA_DIR="$SDKCK_E2E_HOME/data" \
   sdkck plugins install "file:$SDKCK_E2E_HOME/$TGZ"
 
 echo "==> Running end-to-end tests via sdkck"
