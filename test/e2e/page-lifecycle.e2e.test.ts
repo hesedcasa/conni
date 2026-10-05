@@ -1,7 +1,7 @@
 import {expect} from 'chai'
 
 import {cleanupRun, deletePage, fixtureTitle, pageHttpStatus, RUN_ID, trackPage} from './fixtures.js'
-import {createConfigDir, E2E_SPACE, isNumericId, removeConfigDir, runCli, runCliJson} from './helpers.js'
+import {createConfigDir, E2E_SPACE, eventually, isNumericId, removeConfigDir, runCli, runCliJson} from './helpers.js'
 
 type PageData = {id: string; title: string; version?: {number: number}}
 type PagePayload = {data: PageData; success: boolean}
@@ -72,9 +72,16 @@ describe('e2e: page lifecycle', () => {
     )
     expect(payload.success).to.be.true
 
-    const read = await runCliJson<{data: {body: {storage: {value: string}}; title: string}}>(
-      ['conni', 'content', pageId],
-      configDir,
+    // The page GET is not read-after-write consistent: a read straight after a
+    // successful update has come back with the previous title and body. Poll
+    // rather than trusting one lookup; an update that never applied still
+    // fails, as a timeout naming the last page seen.
+    const read = await eventually(
+      'the page read to reflect the update',
+      () =>
+        runCliJson<{data: {body: {storage: {value: string}}; title: string}}>(['conni', 'content', pageId], configDir),
+      (result) =>
+        result.data?.title === updated && (result.data?.body?.storage?.value?.includes('replaced body') ?? false),
     )
     expect(read.data.title).to.equal(updated)
     expect(read.data.body.storage.value).to.contain('replaced body')
@@ -86,12 +93,18 @@ describe('e2e: page lifecycle', () => {
     const before = await runCliJson<PagePayload>(['conni', 'content', pageId], configDir)
     const versionBefore = before.data.version?.number ?? 0
 
-    await runCliJson<PagePayload>(
+    const updated = await runCliJson<PagePayload>(
       ['conni', 'content', 'update', pageId, '--fields', `body=body at ${RUN_ID}`],
       configDir,
     )
+    expect(updated.success, `update failed: ${JSON.stringify(updated)}`).to.be.true
 
-    const after = await runCliJson<PagePayload>(['conni', 'content', pageId], configDir)
+    // Same read-after-write lag as above, seen here as the old version number.
+    const after = await eventually(
+      'the page read to reflect the bumped version',
+      () => runCliJson<PagePayload>(['conni', 'content', pageId], configDir),
+      (result) => (result.data?.version?.number ?? 0) > versionBefore,
+    )
     expect(after.data.version?.number).to.be.greaterThan(versionBefore)
   })
 
@@ -100,8 +113,13 @@ describe('e2e: page lifecycle', () => {
     expect(payload.success).to.be.true
 
     // Asserted through the REST API, not a CQL search: the search index lags
-    // by seconds, so a search could still report the page as present.
-    const status = await pageHttpStatus(pageId)
+    // by seconds, so a search could still report the page as present. Even the
+    // REST GET has answered 200 straight after a successful delete, so poll it.
+    const status = await eventually(
+      `page ${pageId} to read as gone`,
+      () => pageHttpStatus(pageId),
+      (code) => code === 404,
+    )
     expect(status, `page ${pageId} should be gone, got HTTP ${status}`).to.equal(404)
   })
 

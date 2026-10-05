@@ -86,9 +86,17 @@ describe('e2e: read operations', () => {
     )
     expect(unlimited.data.results.length).to.be.at.least(2)
 
-    const limited = await runCliJson<{data: SearchResults; success: boolean}>(
-      ['conni', 'content', 'search', runCql, '--limit', '1'],
-      configDir,
+    // The index is not monotonic: a search straight after one that saw both
+    // fixtures has come back empty. Poll until it sees anything; a --limit
+    // that is ignored still fails the length assertion below.
+    const limited = await eventually(
+      'the limited CQL search to return a result',
+      async () =>
+        runCliJson<{data: SearchResults; success: boolean}>(
+          ['conni', 'content', 'search', runCql, '--limit', '1'],
+          configDir,
+        ),
+      (result) => result.data.results.length > 0,
     )
     expect(limited.data.limit).to.equal(1)
     expect(limited.data.results.length).to.equal(1)
