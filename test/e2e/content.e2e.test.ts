@@ -1,7 +1,7 @@
 import {expect} from 'chai'
 
 import {cleanupRun, fixtureTitle, seedPage} from './fixtures.js'
-import {createConfigDir, isNumericId, removeConfigDir, runCli, runCliJson} from './helpers.js'
+import {createConfigDir, eventually, isNumericId, removeConfigDir, runCli, runCliJson} from './helpers.js'
 
 type Storage = {data: {body: {storage: {value: string}}}; success: boolean}
 type Labels = {data: {results: Array<{name: string; prefix: string}>; size: number}; success: boolean}
@@ -110,7 +110,15 @@ describe('e2e: content conversion, comments and labels', () => {
     )
     expect(updated.success).to.be.true
 
-    const reread = await runCliJson<Storage>(['conni', 'content', commentId], configDir)
+    // The comment GET is not read-after-write consistent: a read straight after
+    // a successful update has come back with the previous version's body.
+    // Poll for the new body rather than trusting one lookup; an update that
+    // never applied still fails, as a timeout naming the last body seen.
+    const reread = await eventually(
+      'the comment read to reflect the update',
+      () => runCliJson<Storage>(['conni', 'content', commentId], configDir),
+      (result) => result.data?.body?.storage?.value?.includes('edited body') ?? false,
+    )
     expect(reread.data.body.storage.value).to.contain('edited body')
     expect(reread.data.body.storage.value).to.not.contain('first line')
 
