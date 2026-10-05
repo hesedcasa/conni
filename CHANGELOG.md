@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.3](https://github.com/hesedcasa/conni/compare/v0.11.2...v0.11.3) (2026-10-05)
+
+
+### 🛠️ Fixes
+
+* **ci:** bring the e2e workflow and script in line with the other plugins ([#150](https://github.com/hesedcasa/conni/issues/150)) ([028de54](https://github.com/hesedcasa/conni/commit/028de544bb4ad8e573361a2c667454c1ec42ffc5))
+* **ci:** keep install-time edits and the client secret away from credentials ([#147](https://github.com/hesedcasa/conni/issues/147)) ([e64db8e](https://github.com/hesedcasa/conni/commit/e64db8e58c7b76f05a011e305da703b97b13bd88))
+
 ## [0.11.2](https://github.com/hesedcasa/conni/compare/v0.11.1...v0.11.2) (2026-09-15)
 
 
