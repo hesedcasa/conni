@@ -367,9 +367,9 @@ async function deleteAll(ids: string[]): Promise<void> {
  *
  * Unions the CQL lookup with the ids `seedPage` recorded, because indexing lags
  * creation by seconds: a suite that seeds a page and then cleans up immediately
- * would otherwise find nothing and orphan it. The CQL half still matters — with
- * E2E_RUN_ID set, a sweep running in a different process than mocha has an
- * empty `created` set and the label is all it has to go on.
+ * would otherwise find nothing and orphan it. The CQL half still matters for
+ * pages this process never recorded. The post-run sweep, which has no `created`
+ * set at all, uses `sweepRun` instead, because one lookup is not enough there.
  */
 export async function cleanupRun(): Promise<void> {
   const indexed = await findByLabel(RUN_LABEL)
@@ -379,6 +379,58 @@ export async function cleanupRun(): Promise<void> {
     // In a `finally` because a partial failure still leaves the parent's fate
     // unknown: re-seeding against a possibly-purged ancestor would fail with a
     // confusing 404 instead of the deletion error worth reporting.
+    forgetParentPage()
+  }
+}
+
+/**
+ * Reclaims this run's fixtures from a process that did not create them.
+ *
+ * The post-run sweep (`scripts/sweep.ts`, with E2E_RUN_ID set) has an empty
+ * `created` set, so the run label is all it has to go on — and a single CQL
+ * lookup misses any page the index has not caught up with yet, letting the
+ * sweep report success while the page stays in the sandbox until `sweepStale`
+ * reaches it an hour later. So the lookup is repeated, deleting whatever each
+ * poll finds, until STABLE_POLLS consecutive polls come back empty: one empty
+ * answer proves nothing for an index that flickers.
+ *
+ * @param timeoutMs How long to keep polling before giving up.
+ * @returns How many distinct pages were deleted.
+ * @throws {Error} If pages still turn up when the deadline passes, or if a
+ *   deletion fails — a silent return would hide fixtures left in the sandbox.
+ */
+export async function sweepRun(timeoutMs = 60_000): Promise<number> {
+  const deadline = Date.now() + timeoutMs
+  const deleted = new Set<string>()
+  let emptyStreak = 0
+
+  try {
+    for (;;) {
+      // eslint-disable-next-line no-await-in-loop
+      const found = await findByLabel(RUN_LABEL)
+      if (found.length === 0) {
+        emptyStreak += 1
+        if (emptyStreak >= STABLE_POLLS) return deleted.size
+      } else {
+        emptyStreak = 0
+        // eslint-disable-next-line no-await-in-loop
+        await deleteAll(found)
+        for (const id of found) deleted.add(id)
+      }
+
+      if (Date.now() >= deadline) {
+        throw new Error(
+          `sweepRun: label "${RUN_LABEL}" still matched pages after ${timeoutMs}ms; ` +
+            `last poll found [${found.join(', ')}]`,
+        )
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise((resolve) => {
+        setTimeout(resolve, 1000)
+      })
+    }
+  } finally {
     forgetParentPage()
   }
 }
