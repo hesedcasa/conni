@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/hesedcasa/conni/compare/v0.11.3...v0.12.0) (2026-10-13)
+
+
+### 🎉 Features
+
+* **content:** add comment-list command for page footer comments ([#157](https://github.com/hesedcasa/conni/issues/157)) ([2d89ea6](https://github.com/hesedcasa/conni/commit/2d89ea64dcbc9f54cd5247060a6b812b7ea446de))
+
 ## [0.11.3](https://github.com/hesedcasa/conni/compare/v0.11.2...v0.11.3) (2026-10-05)
 
 
