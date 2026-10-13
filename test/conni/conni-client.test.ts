@@ -25,6 +25,7 @@ describe('conni-client', () => {
       deleteContent: async () => ({data: {}, success: true}),
       downloadAttachment: async () => ({data: {}, success: true}),
       getContent: async () => ({data: {id: '123456', title: 'Test Page'}, success: true}),
+      getFooterComments: async () => ({data: {results: [], size: 0}, success: true}),
       getLabels: async () => ({data: {results: [], size: 0}, success: true}),
       getSpace: async () => ({data: {id: '10000', key: 'DEV', name: 'Development'}, success: true}),
       listSpaces: async () => ({data: [{id: '10000', key: 'DEV', name: 'Development', type: 'global'}], success: true}),
@@ -400,6 +401,48 @@ describe('conni-client', () => {
 
       expect(result.success).to.be.false
       expect(result.error).to.include('Label creation failed')
+    })
+  })
+
+  describe('getFooterComments', () => {
+    it('returns successful result with footer comments', async () => {
+      let received: any[] = []
+      mockConniApiInstance.getFooterComments = async (pageId: string, opts: any) => {
+        received = [pageId, opts]
+        return {
+          data: {results: [{body: {storage: {value: '<p>hi</p>'}}, id: '10001', pageId: '123456'}], size: 1},
+          success: true,
+        }
+      }
+
+      const result = await conniClient.getFooterComments(mockConfig, '123456', {cursor: 'cur-1', limit: 25})
+
+      expect(result.success).to.be.true
+      expect(result.data.results).to.have.lengthOf(1)
+      expect(received).to.deep.equal(['123456', {cursor: 'cur-1', limit: 25}])
+    })
+
+    it('forwards a call without options', async () => {
+      let received: any[] = []
+      mockConniApiInstance.getFooterComments = async (pageId: string, opts: any) => {
+        received = [pageId, opts]
+        return {data: {results: [], size: 0}, success: true}
+      }
+
+      const result = await conniClient.getFooterComments(mockConfig, '123456')
+
+      expect(result.success).to.be.true
+      expect(result.data.results).to.have.lengthOf(0)
+      expect(received).to.deep.equal(['123456', undefined])
+    })
+
+    it('handles errors', async () => {
+      mockConniApiInstance.getFooterComments = async () => ({error: 'Page not found', success: false})
+
+      const result = await conniClient.getFooterComments(mockConfig, '999999')
+
+      expect(result.success).to.be.false
+      expect(result.error).to.include('Page not found')
     })
   })
 

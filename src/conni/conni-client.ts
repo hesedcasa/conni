@@ -1,6 +1,6 @@
 import {type ApiResult, type AuthConfig, createApiClient} from '@hesed/plugin-lib'
 
-import {ConniApi} from './conni-api.js'
+import {ConniApi, type FooterCommentsOptions} from './conni-api.js'
 
 const {clearClients, getClient} = createApiClient('Confluence', (config: AuthConfig) => new ConniApi(config))
 
@@ -72,6 +72,15 @@ export async function deleteComment(config: AuthConfig, id: string): Promise<Api
 export async function updateComment(config: AuthConfig, id: string, body: string): Promise<ApiResult> {
   const conni = await getClient(config)
   return conni.updateComment(id, body)
+}
+
+export async function getFooterComments(
+  config: AuthConfig,
+  pageId: string,
+  opts?: FooterCommentsOptions,
+): Promise<ApiResult> {
+  const conni = await getClient(config)
+  return conni.getFooterComments(pageId, opts)
 }
 
 export async function deleteContent(config: AuthConfig, pageId: string): Promise<ApiResult> {

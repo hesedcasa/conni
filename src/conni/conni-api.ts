@@ -136,6 +136,15 @@ function toErrorMessage(error: unknown): string {
   return String(error)
 }
 
+/** Options for listing a page's footer comments. */
+export type FooterCommentsOptions = {
+  bodyFormat?: 'atlas_doc_format' | 'storage' | 'view'
+  cursor?: string
+  limit?: number
+  sort?: string
+  status?: string
+}
+
 /**
  * Confluence API Utility
  * Provides core Confluence API operations
@@ -497,6 +506,31 @@ export class ConniApi {
           // new information worth surfacing instead.
           throw isApiError(commentError) && commentError.status === 404 ? pageError : commentError
         }
+      }
+    } catch (error: unknown) {
+      return this.toErrorResult(error)
+    }
+  }
+
+  /**
+   * List the footer comments on a page — the v2 pages footer-comments endpoint.
+   * Inline comments have separate endpoints and are not fetched.
+   */
+  async getFooterComments(pageId: string, opts: FooterCommentsOptions = {}): Promise<ApiResult> {
+    try {
+      const {v2} = this.getClient()
+      const response = await v2.comment.getPageFooterComments({
+        bodyFormat: opts.bodyFormat ?? 'storage',
+        ...(opts.cursor && {cursor: opts.cursor}),
+        ...(opts.limit !== undefined && {limit: opts.limit}),
+        id: asV2Id(pageId),
+        ...(opts.sort && {sort: opts.sort}),
+        ...(opts.status && {status: [opts.status]}),
+      })
+
+      return {
+        data: response,
+        success: true,
       }
     } catch (error: unknown) {
       return this.toErrorResult(error)
