@@ -139,6 +139,10 @@ describe('e2e: content conversion, comments and labels', () => {
     // until the full chain shows up nested before asserting on the shape.
     const findChild = (parent: CommentNode, id: string) => parent.children?.results.find((entry) => entry.id === id)
     const threadIsNested = (result: Comments): boolean => {
+      // A transient failure while fetching replies comes back as
+      // {success: false} with no data on exit 0 — return false so the poll
+      // retries rather than throwing on result.data.
+      if (!result.success) return false
       const root = result.data.results.find((comment) => comment.id === rootId)
       if (!root) return false
       const reply = findChild(root, replyId)
