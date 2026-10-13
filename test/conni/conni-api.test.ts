@@ -408,6 +408,119 @@ describe('ConniApi', () => {
     })
   })
 
+  describe('getFooterComments', () => {
+    it('exports getFooterComments method', () => {
+      expect(conniApi.getFooterComments).to.be.a('function')
+    })
+
+    it('lists footer comments, defaulting the body format to storage', async () => {
+      let received: any
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getPageFooterComments(parameters: any) {
+              received = parameters
+              return {results: [{body: {storage: {value: '<p>hi</p>'}}, id: '10001', pageId: '123456'}], size: 1}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456')
+
+      expect(result.success).to.equal(true)
+      expect(result.data).to.deep.equal({
+        results: [{body: {storage: {value: '<p>hi</p>'}}, id: '10001', pageId: '123456'}],
+        size: 1,
+      })
+      // Only the id and the default reach the endpoint — omitted options send
+      // no keys at all rather than explicit undefineds.
+      expect(received).to.deep.equal({bodyFormat: 'storage', id: '123456'})
+    })
+
+    it('forwards every option to the v2 endpoint', async () => {
+      let received: any
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getPageFooterComments(parameters: any) {
+              received = parameters
+              return {results: [], size: 0}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456', {
+        bodyFormat: 'view',
+        cursor: 'cur-1',
+        limit: 25,
+        sort: 'created-date',
+        status: 'current',
+      })
+
+      expect(result.success).to.equal(true)
+      // The v2 endpoint takes status as a repeatable query parameter, so the
+      // single flag value is forwarded wrapped.
+      expect(received).to.deep.equal({
+        bodyFormat: 'view',
+        cursor: 'cur-1',
+        id: '123456',
+        limit: 25,
+        sort: 'created-date',
+        status: ['current'],
+      })
+    })
+
+    it('reports a nonexistent page as a structured 404', async () => {
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getPageFooterComments() {
+              throw new NotFoundError('Request failed: 404 Not Found - body', 'Not Found', {
+                errors: [{message: {args: [], translation: 'No content found with id : 999999999'}}],
+              })
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('999999999')
+
+      expect(result.success).to.equal(false)
+      expect(result.error).to.equal('Confluence request failed with status 404: No content found with id : 999999999')
+    })
+
+    it('reports a server failure as a structured 500', async () => {
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getPageFooterComments() {
+              throw new ApiError('Request failed: 500 Internal Server Error - body', 500, 'Internal Server Error', {})
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456')
+
+      expect(result.success).to.equal(false)
+      expect(result.error).to.equal('Confluence request failed with status 500')
+    })
+  })
+
   describe('createPage', () => {
     it('exports createPage method', () => {
       expect(conniApi.createPage).to.be.a('function')

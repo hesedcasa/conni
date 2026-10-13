@@ -133,6 +133,17 @@ describe('e2e: read operations', () => {
     expect(payload.error).to.contain('999999999')
   })
 
+  it('lists the footer comments of the fixture page', async () => {
+    // The freshly seeded fixture carries no comments, so an empty array is the
+    // success shape; creating one would need write fixtures this suite lacks.
+    const payload = await runCliJson<{data: {results: unknown[]}; success: boolean}>(
+      ['conni', 'content', 'comment-list', pageId],
+      configDir,
+    )
+    expect(payload.success).to.be.true
+    expect(payload.data.results).to.be.an('array')
+  })
+
   it('formats output as TOON when asked', async () => {
     const {code, stdout} = await runCli(['conni', 'space', 'list', '--toon'], configDir)
     expect(code).to.equal(0)

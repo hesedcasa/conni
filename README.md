@@ -48,6 +48,7 @@ USAGE
 * [`conni conni content attachment-download ATTACHMENTID [OUTPUTPATH]`](#conni-conni-content-attachment-download-attachmentid-outputpath)
 * [`conni conni content comment PAGEID BODY`](#conni-conni-content-comment-pageid-body)
 * [`conni conni content comment-delete ID`](#conni-conni-content-comment-delete-id)
+* [`conni conni content comment-list PAGEID`](#conni-conni-content-comment-list-pageid)
 * [`conni conni content comment-update ID BODY`](#conni-conni-content-comment-update-id-body)
 * [`conni conni content create`](#conni-conni-content-create)
 * [`conni conni content delete PAGEID`](#conni-conni-content-delete-pageid)
@@ -343,6 +344,41 @@ EXAMPLES
 ```
 
 _See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hesedcasa/conni/blob/v0.11.3/src/commands/conni/content/comment-delete.ts)_
+
+## `conni conni content comment-list PAGEID`
+
+List footer comments on Confluence content
+
+```
+USAGE
+  $ conni conni content comment-list PAGEID [--body-format atlas_doc_format|storage|view] [--cursor <value>] [--limit <value>]
+    [-p <value>] [--sort <value>] [--status <value>] [--toon]
+
+ARGUMENTS
+  PAGEID  Page ID
+
+FLAGS
+  -p, --profile=<value>       Authentication profile name
+      --body-format=<option>  Body format of the returned comments
+                              <options: atlas_doc_format|storage|view>
+      --cursor=<value>        Cursor from a previous response to fetch the next page
+      --limit=<value>         Maximum number of comments to return
+      --sort=<value>          Sort order, e.g. created-date or -created-date
+      --status=<value>        Filter by comment status, e.g. current or draft
+      --toon                  Format output as toon
+
+DESCRIPTION
+  List footer comments on Confluence content
+
+EXAMPLES
+  $ conni conni content comment-list 123456
+
+  $ conni conni content comment-list 123456 --limit 25
+
+  $ conni conni content comment-list 123456 --sort created-date --limit 10
+```
+
+_See code: [src/commands/conni/content/comment-list.ts](https://github.com/hesedcasa/conni/blob/v0.11.3/src/commands/conni/content/comment-list.ts)_
 
 ## `conni conni content comment-update ID BODY`
 
