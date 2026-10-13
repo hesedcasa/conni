@@ -142,7 +142,7 @@ export type FooterCommentsOptions = {
   cursor?: string
   limit?: number
   sort?: string
-  status?: string
+  status?: string[]
 }
 
 /**
@@ -525,7 +525,7 @@ export class ConniApi {
         ...(opts.limit !== undefined && {limit: opts.limit}),
         id: asV2Id(pageId),
         ...(opts.sort && {sort: opts.sort}),
-        ...(opts.status && {status: [opts.status]}),
+        ...(opts.status && {status: opts.status}),
       })
 
       return {

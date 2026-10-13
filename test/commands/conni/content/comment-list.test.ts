@@ -80,7 +80,25 @@ describe('content:comment-list', () => {
 
     expect(received).to.deep.equal([
       '123456',
-      {bodyFormat: 'view', cursor: 'cur-1', limit: 25, sort: 'created-date', status: 'current'},
+      {bodyFormat: 'view', cursor: 'cur-1', limit: 25, sort: 'created-date', status: ['current']},
+    ])
+  })
+
+  it('accepts repeated --status flags as an array', async () => {
+    let received: any[] = []
+    mockGetFooterComments = async (_auth: any, pageId: string, opts: any) => {
+      received = [pageId, opts]
+      return {data: {results: []}, success: true}
+    }
+
+    await new ContentListComments.default(
+      ['123456', '--status', 'current', '--status', 'draft'],
+      createMockConfig(),
+    ).run()
+
+    expect(received).to.deep.equal([
+      '123456',
+      {bodyFormat: undefined, cursor: undefined, limit: undefined, sort: undefined, status: ['current', 'draft']},
     ])
   })
 

@@ -462,19 +462,19 @@ describe('ConniApi', () => {
         cursor: 'cur-1',
         limit: 25,
         sort: 'created-date',
-        status: 'current',
+        status: ['current', 'draft'],
       })
 
       expect(result.success).to.equal(true)
       // The v2 endpoint takes status as a repeatable query parameter, so the
-      // single flag value is forwarded wrapped.
+      // array is forwarded as-is.
       expect(received).to.deep.equal({
         bodyFormat: 'view',
         cursor: 'cur-1',
         id: '123456',
         limit: 25,
         sort: 'created-date',
-        status: ['current'],
+        status: ['current', 'draft'],
       })
     })
 

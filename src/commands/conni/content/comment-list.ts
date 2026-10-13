@@ -26,7 +26,11 @@ export default class ContentListComments extends BaseCommand {
     limit: Flags.integer({description: 'Maximum number of comments to return', required: false}),
     profile: Flags.string({char: 'p', description: 'Authentication profile name', required: false}),
     sort: Flags.string({description: 'Sort order, e.g. created-date or -created-date', required: false}),
-    status: Flags.string({description: 'Filter by comment status, e.g. current or draft', required: false}),
+    status: Flags.string({
+      description: 'Filter by comment status, e.g. current or draft (can be used multiple times)',
+      multiple: true,
+      required: false,
+    }),
     toon: Flags.boolean({description: 'Format output as toon', required: false}),
   }
 

@@ -352,7 +352,7 @@ List footer comments on Confluence content
 ```
 USAGE
   $ conni conni content comment-list PAGEID [--body-format atlas_doc_format|storage|view] [--cursor <value>] [--limit <value>]
-    [-p <value>] [--sort <value>] [--status <value>] [--toon]
+    [-p <value>] [--sort <value>] [--status <value>...] [--toon]
 
 ARGUMENTS
   PAGEID  Page ID
@@ -364,7 +364,7 @@ FLAGS
       --cursor=<value>        Cursor from a previous response to fetch the next page
       --limit=<value>         Maximum number of comments to return
       --sort=<value>          Sort order, e.g. created-date or -created-date
-      --status=<value>        Filter by comment status, e.g. current or draft
+      --status=<value>...     Filter by comment status, e.g. current or draft (can be used multiple times)
       --toon                  Format output as toon
 
 DESCRIPTION
