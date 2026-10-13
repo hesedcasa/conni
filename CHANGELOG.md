@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.13.0](https://github.com/hesedcasa/conni/compare/v0.12.0...v0.13.0) (2026-10-13)
+
+
+### 🎉 Features
+
+* **conni:** fetch footer-comment replies recursively in comment-list ([#160](https://github.com/hesedcasa/conni/issues/160)) ([3490d18](https://github.com/hesedcasa/conni/commit/3490d18e95abf8292b8e7a4cd392ecd03923f672))
+
 ## [0.12.0](https://github.com/hesedcasa/conni/compare/v0.11.3...v0.12.0) (2026-10-13)
 
 
