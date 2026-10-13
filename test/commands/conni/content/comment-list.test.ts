@@ -80,7 +80,7 @@ describe('content:comment-list', () => {
 
     expect(received).to.deep.equal([
       '123456',
-      {bodyFormat: 'view', cursor: 'cur-1', limit: 25, sort: 'created-date', status: 'current'},
+      {bodyFormat: 'view', cursor: 'cur-1', includeReplies: undefined, limit: 25, sort: 'created-date', status: 'current'},
     ])
   })
 
@@ -95,8 +95,61 @@ describe('content:comment-list', () => {
 
     expect(received).to.deep.equal([
       '123456',
-      {bodyFormat: undefined, cursor: undefined, limit: undefined, sort: undefined, status: undefined},
+      {
+        bodyFormat: undefined,
+        cursor: undefined,
+        includeReplies: undefined,
+        limit: undefined,
+        sort: undefined,
+        status: undefined,
+      },
     ])
+  })
+
+  it('maps --no-replies to includeReplies false', async () => {
+    let received: any[] = []
+    mockGetFooterComments = async (_auth: any, pageId: string, opts: any) => {
+      received = [pageId, opts]
+      return {data: {results: []}, success: true}
+    }
+
+    await new ContentListComments.default(['123456', '--no-replies'], createMockConfig()).run()
+
+    expect(received).to.deep.equal([
+      '123456',
+      {
+        bodyFormat: undefined,
+        cursor: undefined,
+        includeReplies: false,
+        limit: undefined,
+        sort: undefined,
+        status: undefined,
+      },
+    ])
+  })
+
+  it('returns nested children untouched', async () => {
+    const nested = {
+      data: {
+        results: [
+          {
+            children: {results: [{body: {storage: {value: '<p>reply</p>'}}, id: '10002', pageId: '123456'}]},
+            id: '10001',
+            pageId: '123456',
+          },
+        ],
+        size: 1,
+      },
+      success: true,
+    }
+    mockGetFooterComments = async () => nested
+
+    const command = new ContentListComments.default(['123456'], createMockConfig())
+    const result = await command.run()
+
+    // The API layer owns the nesting; the command is a pass-through, so the
+    // children subtree reaches the caller exactly as it arrived.
+    expect(result).to.deep.equal(nested)
   })
 
   it('formats output as TOON when --toon flag is provided', async () => {

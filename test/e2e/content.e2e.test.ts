@@ -1,10 +1,12 @@
 import {expect} from 'chai'
 
-import {cleanupRun, fixtureTitle, seedPage} from './fixtures.js'
+import {cleanupRun, fixtureTitle, seedFooterComment, seedPage} from './fixtures.js'
 import {createConfigDir, eventually, isNumericId, removeConfigDir, runCli, runCliJson} from './helpers.js'
 
 type Storage = {data: {body: {storage: {value: string}}}; success: boolean}
 type Labels = {data: {results: Array<{name: string; prefix: string}>; size: number}; success: boolean}
+type CommentNode = {children?: {results: CommentNode[]}; id: string}
+type Comments = {data: {results: CommentNode[]; size: number}; success: boolean}
 
 describe('e2e: content conversion, comments and labels', () => {
   let configDir: string
@@ -124,6 +126,57 @@ describe('e2e: content conversion, comments and labels', () => {
 
     const deleted = await runCliJson<{success: boolean}>(['conni', 'content', 'comment-delete', commentId], configDir)
     expect(deleted.success).to.be.true
+  })
+
+  it('lists footer-comment replies nested under their parent', async () => {
+    // A three-deep thread, seeded straight through the REST API so the fixture
+    // is an oracle independent of the CLI's own comment path.
+    const rootId = await seedFooterComment(pageId, '<p>e2e thread root</p>')
+    const replyId = await seedFooterComment(pageId, '<p>e2e reply</p>', rootId)
+    const deepId = await seedFooterComment(pageId, '<p>e2e reply to reply</p>', replyId)
+
+    // Replies are not read-after-write consistent on a fresh thread, so poll
+    // until the full chain shows up nested before asserting on the shape.
+    const findChild = (parent: CommentNode, id: string) => parent.children?.results.find((entry) => entry.id === id)
+    const threadIsNested = (result: Comments): boolean => {
+      // A transient failure while fetching replies comes back as
+      // {success: false} with no data on exit 0 — return false so the poll
+      // retries rather than throwing on result.data.
+      if (!result.success) return false
+      const root = result.data.results.find((comment) => comment.id === rootId)
+      if (!root) return false
+      const reply = findChild(root, replyId)
+      return Boolean(reply && findChild(reply, deepId))
+    }
+
+    const listed = await eventually(
+      'comment-list to nest the reply chain under the root comment',
+      () => runCliJson<Comments>(['conni', 'content', 'comment-list', pageId], configDir),
+      threadIsNested,
+    )
+
+    // The replies nest at depth and only there: results[] itself stays
+    // top-level-only, as every existing consumer of the command expects.
+    const topLevelIds = listed.data.results.map((comment) => comment.id)
+    expect(topLevelIds).to.include(rootId)
+    expect(topLevelIds).to.not.include(replyId)
+    expect(topLevelIds).to.not.include(deepId)
+
+    const root = listed.data.results.find((comment) => comment.id === rootId)
+    expect(root?.children?.results.map((reply) => reply.id)).to.include(replyId)
+    const reply = root?.children?.results.find((entry) => entry.id === replyId)
+    expect(reply?.children?.results.map((deep) => deep.id)).to.include(deepId)
+
+    // --no-replies is the opt-out: the same top-level list, but no children
+    // fetched anywhere.
+    const bare = await runCliJson<Comments>(['conni', 'content', 'comment-list', pageId, '--no-replies'], configDir)
+    expect(bare.success).to.be.true
+    expect(bare.data.results.map((comment) => comment.id)).to.include(rootId)
+    for (const comment of bare.data.results) {
+      expect(comment, `top-level comment ${comment.id} must not carry children under --no-replies`).to.not.have.property(
+        'children',
+      )
+    }
   })
 
   it('adds, lists and removes labels', async () => {

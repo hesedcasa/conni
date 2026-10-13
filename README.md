@@ -347,12 +347,12 @@ _See code: [src/commands/conni/content/comment-delete.ts](https://github.com/hes
 
 ## `conni conni content comment-list PAGEID`
 
-List footer comments on Confluence content
+List footer comments on Confluence content, including replies nested under each parent
 
 ```
 USAGE
   $ conni conni content comment-list PAGEID [--body-format atlas_doc_format|storage|view] [--cursor <value>] [--limit <value>]
-    [-p <value>] [--sort <value>] [--status <value>] [--toon]
+    [--no-replies] [-p <value>] [--sort <value>] [--status <value>] [--toon]
 
 ARGUMENTS
   PAGEID  Page ID
@@ -361,14 +361,16 @@ FLAGS
   -p, --profile=<value>       Authentication profile name
       --body-format=<option>  Body format of the returned comments
                               <options: atlas_doc_format|storage|view>
-      --cursor=<value>        Cursor from a previous response to fetch the next page
-      --limit=<value>         Maximum number of comments to return
+      --cursor=<value>        Cursor from a previous response to fetch the next page of top-level comments (replies are
+                              not paged)
+      --limit=<value>         Maximum number of top-level comments to return (replies are not counted)
+      --no-replies            Return top-level footer comments only, without fetching replies
       --sort=<value>          Sort order, e.g. created-date or -created-date
       --status=<value>        Filter by comment status, e.g. current or draft
       --toon                  Format output as toon
 
 DESCRIPTION
-  List footer comments on Confluence content
+  List footer comments on Confluence content, including replies nested under each parent
 
 EXAMPLES
   $ conni conni content comment-list 123456
@@ -376,6 +378,8 @@ EXAMPLES
   $ conni conni content comment-list 123456 --limit 25
 
   $ conni conni content comment-list 123456 --sort created-date --limit 10
+
+  $ conni conni content comment-list 123456 --no-replies
 ```
 
 _See code: [src/commands/conni/content/comment-list.ts](https://github.com/hesedcasa/conni/blob/v0.12.0/src/commands/conni/content/comment-list.ts)_
