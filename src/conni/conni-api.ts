@@ -28,6 +28,20 @@ function asV2Id(id: string): number {
   return id as unknown as number
 }
 
+/**
+ * Extracts the cursor of a v2 collection's next page from its `_links.next`.
+ *
+ * v2 pagination has no top-level cursor field — the next link is a URL whose
+ * query carries the cursor, relative in practice but absolute has been seen, so
+ * resolve against a throwaway base and read the parameter either way.
+ */
+function nextCursor(links: {_links?: {next?: string}}): string | undefined {
+  const next = links._links?.next
+  if (!next) return undefined
+
+  return new URL(next, 'https://example.invalid').searchParams.get('cursor') ?? undefined
+}
+
 /** Human-readable messages Confluence puts in an error body, preferring its own translations. */
 function errorBodyMessages(body: unknown): string[] {
   if (typeof body !== 'object' || body === null) return []
@@ -140,6 +154,7 @@ function toErrorMessage(error: unknown): string {
 export type FooterCommentsOptions = {
   bodyFormat?: 'atlas_doc_format' | 'storage' | 'view'
   cursor?: string
+  includeReplies?: boolean
   limit?: number
   sort?: string
   status?: string
@@ -513,8 +528,11 @@ export class ConniApi {
   }
 
   /**
-   * List the footer comments on a page — the v2 pages footer-comments endpoint.
-   * Inline comments have separate endpoints and are not fetched.
+   * List the footer comments on a page — the v2 pages footer-comments endpoint —
+   * with each comment's replies fetched recursively from the children endpoint
+   * and nested under it as `children.results` (default on; `includeReplies`
+   * false keeps the flat top-level listing). Inline comments have separate
+   * endpoints and are not fetched.
    */
   async getFooterComments(pageId: string, opts: FooterCommentsOptions = {}): Promise<ApiResult> {
     try {
@@ -528,6 +546,19 @@ export class ConniApi {
         ...(opts.status && {status: [opts.status]}),
       })
 
+      // Replies default on. A comment with none keeps its exact old shape: the
+      // children key is attached only when a subtree came back.
+      if (opts.includeReplies !== false) {
+        const results = (response.results ?? []) as Array<{id: string}>
+        for (const comment of results) {
+          // eslint-disable-next-line no-await-in-loop
+          const replies = await this.getFooterCommentChildrenRecursive(v2, comment.id, opts)
+          if (replies.length > 0) {
+            ;(comment as {children?: {results: unknown[]}}).children = {results: replies}
+          }
+        }
+      }
+
       return {
         data: response,
         success: true,
@@ -535,6 +566,47 @@ export class ConniApi {
     } catch (error: unknown) {
       return this.toErrorResult(error)
     }
+  }
+
+  /**
+   * Collect every reply below a footer comment, at any nesting depth, from the
+   * footer-comment children endpoint.
+   *
+   * Children calls repeat the parent call's bodyFormat (defaulting the same way
+   * to storage) and sort. The endpoint has no status filter, and the caller's
+   * cursor and limit are scoped to the top-level list, so none of those are
+   * forwarded. Pages are walked sequentially: one children chain at a time keeps
+   * the request pattern predictable against Confluence's rate limits.
+   */
+  private async getFooterCommentChildrenRecursive(
+    v2: V2Client,
+    commentId: string,
+    opts: FooterCommentsOptions,
+  ): Promise<unknown[]> {
+    const replies: unknown[] = []
+    let cursor: string | undefined
+
+    do {
+      // eslint-disable-next-line no-await-in-loop
+      const page = await v2.comment.getFooterCommentChildren({
+        bodyFormat: opts.bodyFormat ?? 'storage',
+        id: asV2Id(commentId),
+        ...(cursor && {cursor}),
+        ...(opts.sort && {sort: opts.sort}),
+      })
+
+      for (const child of page.results ?? []) {
+        // eslint-disable-next-line no-await-in-loop
+        const nested = await this.getFooterCommentChildrenRecursive(v2, (child as {id: string}).id, opts)
+        // The comment model has no children field — attaching the subtree keeps
+        // the CLI's nesting contract, only for comments that have replies.
+        replies.push(nested.length > 0 ? {...child, children: {results: nested}} : child)
+      }
+
+      cursor = nextCursor(page)
+    } while (cursor)
+
+    return replies
   }
 
   /**

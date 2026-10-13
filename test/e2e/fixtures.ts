@@ -126,6 +126,39 @@ export async function seedPage(overrides: Record<string, unknown> = {}, extraLab
 }
 
 /**
+ * Creates a footer comment on a page via the REST API directly, optionally as a
+ * reply to another comment.
+ *
+ * Fixtures are never created through the CLI: they are the oracle the CLI is
+ * checked against, so they must not share its code path.
+ *
+ * Comments hang off their page and are reclaimed when `cleanupRun` deletes that
+ * page, so no tracking of their own is needed.
+ *
+ * @param pageId The page to comment on. Ignored when `parentCommentId` is set —
+ *   a reply belongs to its parent.
+ * @param storageValue The comment body, already in storage format.
+ * @param parentCommentId When set, the comment is created as a reply to it.
+ * @returns The created comment id.
+ * @throws {Error} If Confluence rejects the request.
+ */
+export async function seedFooterComment(pageId: string, storageValue: string, parentCommentId?: string): Promise<string> {
+  const {body, status} = await call('POST', '/wiki/api/v2/footer-comments', {
+    body: {representation: 'storage', value: storageValue},
+    pageId,
+    ...(parentCommentId && {parentCommentId}),
+  })
+
+  // The create endpoint answers 200, not the 201 the REST conventions suggest.
+  if (status !== 200 && status !== 201) {
+    throw new Error(`seedFooterComment failed: ${status} ${JSON.stringify(body)}`)
+  }
+
+  const {id} = body as {id: string}
+  return id
+}
+
+/**
  * Creates (once per process) the parent page fixtures are nested under.
  *
  * It carries the same labels as its children, so `cleanupRun` and `sweepStale`

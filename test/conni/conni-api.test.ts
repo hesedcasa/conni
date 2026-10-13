@@ -419,6 +419,9 @@ describe('ConniApi', () => {
         v1: {},
         v2: {
           comment: {
+            async getFooterCommentChildren() {
+              return {results: []}
+            },
             async getPageFooterComments(parameters: any) {
               received = parameters
               return {results: [{body: {storage: {value: '<p>hi</p>'}}, id: '10001', pageId: '123456'}], size: 1}
@@ -439,6 +442,239 @@ describe('ConniApi', () => {
       // Only the id and the default reach the endpoint — omitted options send
       // no keys at all rather than explicit undefineds.
       expect(received).to.deep.equal({bodyFormat: 'storage', id: '123456'})
+    })
+
+    it('nests a reply under its parent as children.results', async () => {
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentChildren(parameters: any) {
+              return parameters.id === '10001'
+                ? {results: [{body: {storage: {value: '<p>reply</p>'}}, id: '10002', pageId: '123456'}], size: 1}
+                : {results: [], size: 0}
+            },
+            async getPageFooterComments() {
+              return {results: [{body: {storage: {value: '<p>root</p>'}}, id: '10001', pageId: '123456'}], size: 1}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456')
+
+      expect(result.success).to.equal(true)
+      // The top-level list stays top-level-only; the reply rides along nested,
+      // and the reply itself — having no children — keeps its plain shape.
+      expect(result.data).to.deep.equal({
+        results: [
+          {
+            body: {storage: {value: '<p>root</p>'}},
+            children: {
+              results: [{body: {storage: {value: '<p>reply</p>'}}, id: '10002', pageId: '123456'}],
+            },
+            id: '10001',
+            pageId: '123456',
+          },
+        ],
+        size: 1,
+      })
+    })
+
+    it('recurses replies to replies at every depth', async () => {
+      const childrenCalls: any[] = []
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentChildren(parameters: any) {
+              childrenCalls.push(parameters)
+              const byParent: Record<string, any> = {
+                '10001': {results: [{id: '10002'}], size: 1},
+                '10002': {results: [{id: '10003'}], size: 1},
+              }
+              return byParent[parameters.id] ?? {results: [], size: 0}
+            },
+            async getPageFooterComments() {
+              return {results: [{id: '10001'}], size: 1}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456')
+
+      expect(result.success).to.equal(true)
+      expect(result.data).to.deep.equal({
+        results: [
+          {
+            children: {
+              results: [
+                {
+                  children: {
+                    results: [{id: '10003'}],
+                  },
+                  id: '10002',
+                },
+              ],
+            },
+            id: '10001',
+          },
+        ],
+        size: 1,
+      })
+      // One chain per comment in the tree: root, its reply, the reply's reply.
+      expect(childrenCalls.map((call) => call.id)).to.deep.equal(['10001', '10002', '10003'])
+    })
+
+    it('follows the children pagination cursor until exhausted', async () => {
+      const childrenCalls: any[] = []
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentChildren(parameters: any) {
+              childrenCalls.push(parameters)
+              if (parameters.id !== '10001') return {results: [], size: 0}
+              if (parameters.cursor) return {results: [{id: '10003'}], size: 1}
+
+              return {
+                _links: {
+                  next: '/wiki/api/v2/footer-comments/10001/children?cursor=cur-2&body-format=storage',
+                },
+                results: [{id: '10002'}],
+                size: 1,
+              }
+            },
+            async getPageFooterComments() {
+              return {results: [{id: '10001'}], size: 1}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456')
+
+      expect(result.success).to.equal(true)
+      expect(result.data).to.deep.equal({
+        results: [
+          {
+            children: {
+              results: [{id: '10002'}, {id: '10003'}],
+            },
+            id: '10001',
+          },
+        ],
+        size: 1,
+      })
+      // The second page of the root's replies was requested with the cursor
+      // read out of _links.next.
+      const rootCalls = childrenCalls.filter((call) => call.id === '10001')
+      expect(rootCalls).to.deep.equal([
+        {bodyFormat: 'storage', id: '10001'},
+        {bodyFormat: 'storage', cursor: 'cur-2', id: '10001'},
+      ])
+    })
+
+    it('propagates bodyFormat and sort to every children call', async () => {
+      const childrenCalls: any[] = []
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentChildren(parameters: any) {
+              childrenCalls.push(parameters)
+              if (parameters.id !== '10001') return {results: [], size: 0}
+              if (parameters.cursor) return {results: [{id: '10003'}], size: 1}
+
+              return {
+                _links: {next: '/wiki/api/v2/footer-comments/10001/children?cursor=cur-2'},
+                results: [{id: '10002'}],
+                size: 1,
+              }
+            },
+            async getPageFooterComments() {
+              return {results: [{id: '10001'}], size: 1}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456', {
+        bodyFormat: 'view',
+        sort: '-created-date',
+        status: 'current',
+      })
+
+      expect(result.success).to.equal(true)
+      // Every children call repeats bodyFormat and sort. status is not among
+      // them: the children endpoint has no status filter to forward it to.
+      expect(childrenCalls).to.deep.equal([
+        {bodyFormat: 'view', id: '10001', sort: '-created-date'},
+        {bodyFormat: 'view', id: '10002', sort: '-created-date'},
+        {bodyFormat: 'view', cursor: 'cur-2', id: '10001', sort: '-created-date'},
+        {bodyFormat: 'view', id: '10003', sort: '-created-date'},
+      ])
+    })
+
+    it('skips children calls entirely with includeReplies false', async () => {
+      let childrenCalls = 0
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentChildren() {
+              childrenCalls += 1
+              return {results: [{id: '10002'}], size: 1}
+            },
+            async getPageFooterComments() {
+              return {results: [{body: {storage: {value: '<p>root</p>'}}, id: '10001', pageId: '123456'}], size: 1}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456', {includeReplies: false})
+
+      expect(result.success).to.equal(true)
+      expect(childrenCalls).to.equal(0)
+      expect(result.data).to.deep.equal({
+        results: [{body: {storage: {value: '<p>root</p>'}}, id: '10001', pageId: '123456'}],
+        size: 1,
+      })
+    })
+
+    it('fails the whole request when a children call errors', async () => {
+      const stubClient = {
+        v1: {},
+        v2: {
+          comment: {
+            async getFooterCommentChildren() {
+              throw new ApiError('Request failed: 500 Internal Server Error - body', 500, 'Internal Server Error', {})
+            },
+            async getPageFooterComments() {
+              return {results: [{id: '10001'}], size: 1}
+            },
+          },
+        },
+      }
+
+      conniApi.getClient = () => stubClient as unknown as ReturnType<typeof conniApi.getClient>
+
+      const result = await conniApi.getFooterComments('123456')
+
+      expect(result.success).to.equal(false)
+      expect(result.error).to.equal('Confluence request failed with status 500')
     })
 
     it('forwards every option to the v2 endpoint', async () => {
