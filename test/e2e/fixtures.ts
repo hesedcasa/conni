@@ -145,8 +145,8 @@ export async function seedPage(overrides: Record<string, unknown> = {}, extraLab
 export async function seedFooterComment(pageId: string, storageValue: string, parentCommentId?: string): Promise<string> {
   const {body, status} = await call('POST', '/wiki/api/v2/footer-comments', {
     body: {representation: 'storage', value: storageValue},
-    pageId,
-    ...(parentCommentId && {parentCommentId}),
+    // The v2 API accepts exactly one container id, so a reply names only its parent.
+    ...(parentCommentId ? {parentCommentId} : {pageId}),
   })
 
   // The create endpoint answers 200, not the 201 the REST conventions suggest.
