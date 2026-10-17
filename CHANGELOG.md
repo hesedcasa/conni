@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.0](https://github.com/hesedcasa/conni/compare/v0.13.0...v0.14.0) (2026-10-17)
+
+
+### 🎉 Features
+
+* **content:** read comment text from a file instead of argv ([#163](https://github.com/hesedcasa/conni/issues/163)) ([9e5846d](https://github.com/hesedcasa/conni/commit/9e5846d05c9256740528b39672e1c4200bdda294))
+
 ## [0.13.0](https://github.com/hesedcasa/conni/compare/v0.12.0...v0.13.0) (2026-10-13)
 
 
