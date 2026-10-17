@@ -2,6 +2,9 @@
 /* eslint-disable new-cap */
 import {expect} from 'chai'
 import esmock from 'esmock'
+import {mkdtempSync, rmSync, writeFileSync} from 'node:fs'
+import {tmpdir} from 'node:os'
+import path from 'node:path'
 
 import {createMockConfig} from '../../../helpers/config-mock.js'
 
@@ -133,5 +136,44 @@ describe('content:comment', () => {
     await command.run()
 
     expect(clearClientsCalled).to.be.true
+  })
+
+  describe('@<path> body', () => {
+    let dir: string
+    let capturedBody: string | undefined
+
+    beforeEach(async () => {
+      dir = mkdtempSync(path.join(tmpdir(), 'conni-comment-'))
+      capturedBody = undefined
+      ContentAddComment = await esmock('../../../../src/commands/conni/content/comment.js', {
+        '../../../../src/conni/conni-client.js': {
+          async addComment(_config: any, _pageId: string, body: string) {
+            capturedBody = body
+            return {data: {id: '10001'}, success: true}
+          },
+          clearClients: mockClearClients,
+        },
+        '@hesed/plugin-lib': {createProfileManager: mockCreateProfileManager},
+      })
+    })
+
+    afterEach(() => {
+      rmSync(dir, {force: true, recursive: true})
+    })
+
+    it('reads the comment from the file', async () => {
+      const file = path.join(dir, 'body.md')
+      writeFileSync(file, '# Long comment\n\nbody')
+
+      await new ContentAddComment.default(['123456', `@${file}`], createMockConfig()).run()
+
+      expect(capturedBody).to.equal('# Long comment\n\nbody')
+    })
+
+    it('keeps a literal leading @ escaped as @@', async () => {
+      await new ContentAddComment.default(['123456', '@@team please review'], createMockConfig()).run()
+
+      expect(capturedBody).to.equal('@team please review')
+    })
   })
 })

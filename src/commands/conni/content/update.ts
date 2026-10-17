@@ -14,7 +14,7 @@ export default class ContentUpdate extends BaseCommand {
   static override examples = [
     "<%= config.bin %> <%= command.id %> 1076199489 --fields title='New summary' body='New description'",
     "<%= config.bin %> <%= command.id %> 1076199489 --fields body='\n# Header\n## Sub-header\n- Item 1\n- Item 2\n```bash\nls -a\n```'",
-    '<%= config.bin %> <%= command.id %> 1076199489 --fields body="$(cat content.md)"',
+    '<%= config.bin %> <%= command.id %> 1076199489 --fields body=@content.md',
     '<%= config.bin %> <%= command.id %> 1076199489 --fields body=@storage.xml representation=storage --full-width',
   ]
 

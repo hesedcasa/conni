@@ -208,6 +208,7 @@ infisical run -- ./bin/dev.js conni auth test
 - ES modules throughout — imports of local files must carry the `.js` extension.
 - Node.js >=22 required. CI builds on the `.nvmrc` version and runs tests on Node 22, 23, and 24 across Linux, Windows, and macOS.
 - `npm run pre-commit` (format + dead-code check) exists as a script, but **no git hook is installed** — run it manually before committing.
+- **Long text goes through a file, not argv.** Endpoint security (SentinelOne) blocks processes with huge command lines, so a `content comment`/`comment-update` body of `@<path>` is read from that file (`@-` reads stdin, `@@` escapes a literal leading `@`) via `readTextValue()` in `src/text-input.ts`, and `--fields key=@<path>` reads a field value from a file. stdin is read as a stream since a sync `readFileSync(0)` throws EAGAIN once stdin is non-blocking.
 - Releases are automated by release-please; `prepack` regenerates `oclif.manifest.json` and the README command reference, so don't hand-edit the `<!-- commands -->` block in README.md.
 
 ## Commit Message Convention
