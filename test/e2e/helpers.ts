@@ -27,6 +27,22 @@ export const E2E_SPACE = 'Sidekick'
  */
 export const E2E_EMPTY_LABEL = 'e2e-label-that-matches-nothing'
 
+/**
+ * How long a CQL visibility wait (`eventually()` over a search, `waitForIndexed()`)
+ * may poll. Confluence's index lag is not bounded by the 60s the rest of the
+ * suite allows for read-after-write: CI has seen a fixture stay unindexed for
+ * a full minute while every search answered `success: true` with no results.
+ * Only CQL waits get this budget — a REST read that is slow is a real failure.
+ */
+export const CQL_INDEX_BUDGET_MS = 150_000
+
+/**
+ * Per-test mocha timeout for a test that makes one CQL visibility wait: the
+ * budget plus headroom for the CLI calls around it. Set it with `.timeout()`
+ * on those tests only, so the suite-wide ceiling still fails a hang quickly.
+ */
+export const CQL_TEST_TIMEOUT_MS = CQL_INDEX_BUDGET_MS + 30_000
+
 export type CliResult = {
   code: number
   stderr: string

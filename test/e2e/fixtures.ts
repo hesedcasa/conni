@@ -1,7 +1,7 @@
 import {Buffer} from 'node:buffer'
 import {randomBytes} from 'node:crypto'
 
-import {E2E_SPACE, requireEnv} from './helpers.js'
+import {CQL_INDEX_BUDGET_MS, E2E_SPACE, requireEnv} from './helpers.js'
 
 /**
  * One token per mocha process, so concurrent runs never delete each other's
@@ -259,7 +259,7 @@ const STABLE_POLLS = 3
  *   into a confusing assertion error later.
  */
 export async function waitForIndexed(label: string, ids: string[]): Promise<string[]> {
-  const deadline = Date.now() + 60_000
+  const deadline = Date.now() + CQL_INDEX_BUDGET_MS
   let seen: string[] = []
   let streak = 0
 
