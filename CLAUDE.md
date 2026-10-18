@@ -69,7 +69,7 @@ Every file under `src/commands/conni/auth/` is a one-line factory call passing `
 
 Never call `this.logJson(result)` — it double-prints under the default JSON mode.
 
-`BaseCommand` carries two further workarounds, both documented inline in [src/base-command.ts](src/base-command.ts): `parse()` force-sets `this.parsed = true` in a `finally` so a thrown parse error doesn't also emit an `UnparsedCommand` warning, and `toErrorJson()` reduces errors to `{error: message}` because oclif's default leaks the whole config via `CLIParseError.context`.
+`BaseCommand` carries three further workarounds, all documented inline in [src/base-command.ts](src/base-command.ts): `parse()` force-sets `this.parsed = true` in a `finally` so a thrown parse error doesn't also emit an `UnparsedCommand` warning; `toErrorJson()` reduces errors to `{error: message}` because oclif's default leaks the whole config via `CLIParseError.context`; and `catch()` pins a JSON-mode command failure to exit 1 (an explicit `this.exit(n)` keeps `n`), because `@oclif/core` 5.1.8+ promotes `this.error()`'s default exit 2 while the lockfile's 5.1.0 does not — and a plugin host resolves its own copy. Don't pass `{exit: …}` to `this.error()` per command; the override owns the code.
 
 ### ApiResult never throws
 
@@ -182,7 +182,7 @@ infisical run -- npm run e2e:sweep             # reclaim stale fixtures and purg
 Rules specific to this suite:
 
 - **Never pass `--json`.** JSON is already the default (`BaseCommand.jsonEnabled()`); `--json` is not a declared flag and the command will fail to parse.
-- **Know which exit code to expect.** An `ApiResult` failure exits **0** with `{error, success: false}` — `ConniApi` never throws, so oclif sees a successful command. Only `this.error(...)` paths exit non-zero, and they all exit **2** (oclif's error default) — a missing profile, a parse error, and plugin-lib's `auth test` alike, in both JSON and `--toon` mode. `@oclif/core` is floored at `^5.1.8` because older 5.x ignored `err.oclif.exit` in JSON mode and exited 1, which made the standalone leg (lockfile) and the sdkck leg (fresh resolve) disagree. Assert on `success`, not on `$?`, unless the path is a `this.error(...)` one.
+- **Know which exit code to expect.** An `ApiResult` failure exits **0** with `{error, success: false}` — `ConniApi` never throws, so oclif sees a successful command. Only `this.error(...)` paths exit non-zero: a missing profile exits 1 (pinned by `BaseCommand.catch()`, so the sdkck leg's fresher `@oclif/core` cannot turn it into 2), and plugin-lib's `auth test` exits 2. Assert on `success`, not on `$?`, unless the path is one of those two.
 - **Never assert on error message text.** Confluence translates its messages. Assert on exit codes, `success`, and the HTTP status substring.
 - **Fixtures are created with raw `fetch` in `test/e2e/fixtures.ts`, never through the CLI** — they are the oracle the CLI is checked against.
 - **Quote every CQL value.** An unquoted `space=Sidekick` is a parse error that comes back with no `size` field at all, which reads as "nothing matched".
