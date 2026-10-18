@@ -77,6 +77,10 @@ describe('e2e: read operations', () => {
     expect(payload.data.results.map((page) => page.id)).to.include(pageId)
   })
 
+  // Two sequential CQL polls, each with the full index budget, plus room for
+  // the CLI calls between them. The suite-wide per-test ceiling is smaller
+  // than that sum, so it would fire while both waits are still inside their
+  // individual budgets — failing a run whose indexing was merely slow.
   it('honours --limit', async () => {
     // Wait until the unlimited search sees both fixtures, so a --limit of 1 is
     // genuinely a truncation rather than coincidentally the whole result set.
@@ -104,7 +108,7 @@ describe('e2e: read operations', () => {
     )
     expect(limited.data.limit).to.equal(1)
     expect(limited.data.results.length).to.equal(1)
-  })
+  }).timeout(2 * CQL_INDEX_BUDGET_MS + 60_000)
 
   it('returns an empty result set rather than failing when nothing matches', async () => {
     const payload = await runCliJson<{data: SearchResults; success: boolean}>(
