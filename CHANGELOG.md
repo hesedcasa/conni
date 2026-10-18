@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.14.0](https://github.com/hesedcasa/conni/compare/v0.13.0...v0.14.0) (2026-10-18)
+
+
+### 🎉 Features
+
+* **content:** read comment text from a file instead of argv ([#163](https://github.com/hesedcasa/conni/issues/163)) ([9e5846d](https://github.com/hesedcasa/conni/commit/9e5846d05c9256740528b39672e1c4200bdda294))
+
+
+### 🛠️ Fixes
+
+* **cli:** pin missing-profile exit code in BaseCommand.catch() ([#166](https://github.com/hesedcasa/conni/issues/166)) ([a2fb146](https://github.com/hesedcasa/conni/commit/a2fb146f056fbab6f8dd5503ee01a7d40e2afaed))
+
 ## [0.13.0](https://github.com/hesedcasa/conni/compare/v0.12.0...v0.13.0) (2026-10-13)
 
 
