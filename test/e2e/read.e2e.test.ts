@@ -2,6 +2,8 @@ import {expect} from 'chai'
 
 import {cleanupRun, fixtureTitle, RUN_ID, seedPage, SHARED_LABEL} from './fixtures.js'
 import {
+  CQL_INDEX_BUDGET_MS,
+  CQL_TEST_TIMEOUT_MS,
   createConfigDir,
   E2E_EMPTY_LABEL,
   E2E_SPACE,
@@ -69,38 +71,43 @@ describe('e2e: read operations', () => {
       async () =>
         runCliJson<{data: SearchResults; success: boolean}>(['conni', 'content', 'search', runCql], configDir),
       (result) => result.data.results.some((page) => page.id === pageId),
+      CQL_INDEX_BUDGET_MS,
     )
 
     expect(payload.success).to.be.true
     expect(payload.data.results.map((page) => page.id)).to.include(pageId)
-  })
+  }).timeout(CQL_TEST_TIMEOUT_MS)
 
   it('honours --limit', async () => {
-    // Wait until the unlimited search sees both fixtures, so a --limit of 1 is
-    // genuinely a truncation rather than coincidentally the whole result set.
-    const unlimited = await eventually(
-      'the CQL search to return both fixtures',
-      async () =>
-        runCliJson<{data: SearchResults; success: boolean}>(['conni', 'content', 'search', runCql], configDir),
-      (result) => result.data.results.length >= 2,
-    )
-    expect(unlimited.data.results.length).to.be.at.least(2)
+    // One poll over the unlimited/limited pair rather than two polls in a row,
+    // so the test spends a single CQL budget. The unlimited search must see
+    // both fixtures, making a --limit of 1 genuinely a truncation rather than
+    // coincidentally the whole result set; and since the index is not
+    // monotonic — a search straight after one that saw both fixtures has come
+    // back empty — the limited search is retried with it until it sees
+    // anything. A --limit that is ignored still fails the length assertion.
+    const {limited, unlimited} = await eventually(
+      'the unlimited CQL search to return both fixtures and the limited one a result',
+      async () => {
+        const unlimited = await runCliJson<{data: SearchResults; success: boolean}>(
+          ['conni', 'content', 'search', runCql],
+          configDir,
+        )
+        if (unlimited.data.results.length < 2) return {limited: undefined, unlimited}
 
-    // The index is not monotonic: a search straight after one that saw both
-    // fixtures has come back empty. Poll until it sees anything; a --limit
-    // that is ignored still fails the length assertion below.
-    const limited = await eventually(
-      'the limited CQL search to return a result',
-      async () =>
-        runCliJson<{data: SearchResults; success: boolean}>(
+        const limited = await runCliJson<{data: SearchResults; success: boolean}>(
           ['conni', 'content', 'search', runCql, '--limit', '1'],
           configDir,
-        ),
-      (result) => result.data.results.length > 0,
+        )
+        return {limited, unlimited}
+      },
+      (result) => result.limited !== undefined && result.limited.data.results.length > 0,
+      CQL_INDEX_BUDGET_MS,
     )
-    expect(limited.data.limit).to.equal(1)
-    expect(limited.data.results.length).to.equal(1)
-  })
+    expect(unlimited.data.results.length).to.be.at.least(2)
+    expect(limited?.data.limit).to.equal(1)
+    expect(limited?.data.results.length).to.equal(1)
+  }).timeout(CQL_TEST_TIMEOUT_MS)
 
   it('returns an empty result set rather than failing when nothing matches', async () => {
     const payload = await runCliJson<{data: SearchResults; success: boolean}>(

@@ -11,7 +11,7 @@ import {
   trashPage,
   waitForIndexed,
 } from './fixtures.js'
-import {eventually, isNumericId} from './helpers.js'
+import {CQL_TEST_TIMEOUT_MS, eventually, isNumericId} from './helpers.js'
 
 describe('e2e: fixtures', () => {
   after(async () => {
@@ -29,7 +29,7 @@ describe('e2e: fixtures', () => {
 
     const afterCleanup = await findByLabel(RUN_LABEL)
     expect(afterCleanup).to.not.include(id)
-  })
+  }).timeout(CQL_TEST_TIMEOUT_MS)
 
   it('cleans up a fixture created too recently to be indexed', async () => {
     // No waitForIndexed here: that is the point. cleanupRun runs while the page

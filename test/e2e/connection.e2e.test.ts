@@ -54,11 +54,15 @@ describe('e2e: connection', () => {
     expect(payload.error).to.contain('404')
   })
 
-  it('fails with exit 1 when the profile does not exist', async () => {
+  it('fails with exit 2 when the profile does not exist', async () => {
     const {code, stdout} = await runCli(['conni', 'space', 'list', '-p', 'nosuch'], configDir)
     // A missing profile is caught by this.error() before any request is made,
-    // so unlike an API failure it does exit non-zero.
-    expect(code).to.equal(1)
+    // so unlike an API failure it does exit non-zero — with oclif's error exit
+    // code, the same as `--toon` mode, parse errors and plugin-lib's auth
+    // commands. (@oclif/core <5.1.8 exited 1 here in JSON mode only, because
+    // Command.catch ignored err.oclif.exit; `^5.1.8` keeps both e2e legs on
+    // the fixed behaviour.)
+    expect(code).to.equal(2)
 
     const payload = JSON.parse(stdout) as {error: string}
     expect(payload.error).to.contain('Missing authentication config')
