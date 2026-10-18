@@ -27,7 +27,7 @@ export default class ContentDownloadAttachment extends BaseCommand {
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
     if (!auth) {
-      this.error(`Missing authentication config.`)
+      this.error(`Missing authentication config.`, {exit: 1})
     }
 
     // Leave outputPath undefined when the user omits it: the api layer joins the

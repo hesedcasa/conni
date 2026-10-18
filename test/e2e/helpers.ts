@@ -27,6 +27,20 @@ export const E2E_SPACE = 'Sidekick'
  */
 export const E2E_EMPTY_LABEL = 'e2e-label-that-matches-nothing'
 
+/**
+ * Poll budget for CQL visibility waits (eventually() and waitForIndexed()).
+ *
+ * Confluence's CQL index is eventually consistent and not monotonic, and the
+ * lag is not bounded by the 14s this suite originally documented: CI run 39044519186
+ * saw a fixture still unindexed after the full 60s budget while every read of it
+ * answered `success: true` with an empty result set, and the same fixture was
+ * found by an earlier leg minutes before (`honours --limit` passed at 56.9s of
+ * polling). MIN-52 attributes those failures to this lag, which is the only
+ * condition under which this budget may grow — a search that *fails* still
+ * times out like any other.
+ */
+export const CQL_INDEX_BUDGET_MS = 150_000
+
 export type CliResult = {
   code: number
   stderr: string

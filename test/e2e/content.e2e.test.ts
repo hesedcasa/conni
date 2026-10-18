@@ -173,9 +173,10 @@ describe('e2e: content conversion, comments and labels', () => {
     expect(bare.success).to.be.true
     expect(bare.data.results.map((comment) => comment.id)).to.include(rootId)
     for (const comment of bare.data.results) {
-      expect(comment, `top-level comment ${comment.id} must not carry children under --no-replies`).to.not.have.property(
-        'children',
-      )
+      expect(
+        comment,
+        `top-level comment ${comment.id} must not carry children under --no-replies`,
+      ).to.not.have.property('children')
     }
   })
 

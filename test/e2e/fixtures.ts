@@ -1,7 +1,7 @@
 import {Buffer} from 'node:buffer'
 import {randomBytes} from 'node:crypto'
 
-import {E2E_SPACE, requireEnv} from './helpers.js'
+import {CQL_INDEX_BUDGET_MS, E2E_SPACE, requireEnv} from './helpers.js'
 
 /**
  * One token per mocha process, so concurrent runs never delete each other's
@@ -142,7 +142,11 @@ export async function seedPage(overrides: Record<string, unknown> = {}, extraLab
  * @returns The created comment id.
  * @throws {Error} If Confluence rejects the request.
  */
-export async function seedFooterComment(pageId: string, storageValue: string, parentCommentId?: string): Promise<string> {
+export async function seedFooterComment(
+  pageId: string,
+  storageValue: string,
+  parentCommentId?: string,
+): Promise<string> {
   const {body, status} = await call('POST', '/wiki/api/v2/footer-comments', {
     body: {representation: 'storage', value: storageValue},
     // The v2 API accepts exactly one container id, so a reply names only its parent.
@@ -259,7 +263,7 @@ const STABLE_POLLS = 3
  *   into a confusing assertion error later.
  */
 export async function waitForIndexed(label: string, ids: string[]): Promise<string[]> {
-  const deadline = Date.now() + 60_000
+  const deadline = Date.now() + CQL_INDEX_BUDGET_MS
   let seen: string[] = []
   let streak = 0
 

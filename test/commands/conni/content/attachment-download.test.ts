@@ -154,6 +154,8 @@ describe('content:attachment-download', () => {
       await command.run()
     } catch (error: any) {
       expect(error.message).to.include('Missing authentication config.')
+      // Pinned contract (CLAUDE.md): a missing profile exits 1 — not an @oclif/core default.
+      expect(error.oclif.exit).to.equal(1)
     }
 
     expect(downloadAttachmentCalled).to.be.false

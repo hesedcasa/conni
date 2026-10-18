@@ -27,7 +27,7 @@ export default class ContentSearch extends BaseCommand {
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
     if (!auth) {
-      this.error(`Missing authentication config.`)
+      this.error(`Missing authentication config.`, {exit: 1})
     }
 
     const result = await searchContents(auth, args.cql, flags.limit, flags.expand ? flags.expand.split(',') : undefined)

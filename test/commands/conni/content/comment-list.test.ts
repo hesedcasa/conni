@@ -80,7 +80,14 @@ describe('content:comment-list', () => {
 
     expect(received).to.deep.equal([
       '123456',
-      {bodyFormat: 'view', cursor: 'cur-1', includeReplies: undefined, limit: 25, sort: 'created-date', status: 'current'},
+      {
+        bodyFormat: 'view',
+        cursor: 'cur-1',
+        includeReplies: undefined,
+        limit: 25,
+        sort: 'created-date',
+        status: 'current',
+      },
     ])
   })
 
@@ -191,6 +198,8 @@ describe('content:comment-list', () => {
       await command.run()
     } catch (error: any) {
       expect(error.message).to.include('Missing authentication config.')
+      // Pinned contract (CLAUDE.md): a missing profile exits 1 — not an @oclif/core default.
+      expect(error.oclif.exit).to.equal(1)
     }
 
     expect(getFooterCommentsCalled).to.be.false

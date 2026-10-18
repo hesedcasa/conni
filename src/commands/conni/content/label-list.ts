@@ -31,7 +31,7 @@ export default class ContentListLabels extends BaseCommand {
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
     if (!auth) {
-      this.error(`Missing authentication config.`)
+      this.error(`Missing authentication config.`, {exit: 1})
     }
 
     const result = await getLabels(auth, args.pageId, flags.prefix, flags.limit)

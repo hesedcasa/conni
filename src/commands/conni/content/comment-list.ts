@@ -9,8 +9,7 @@ export default class ContentListComments extends BaseCommand {
     pageId: Args.string({description: 'Page ID', required: true}),
   }
 
-  static override description =
-    'List footer comments on Confluence content, including replies nested under each parent'
+  static override description = 'List footer comments on Confluence content, including replies nested under each parent'
 
   static override examples = [
     '<%= config.bin %> <%= command.id %> 123456',
@@ -26,7 +25,8 @@ export default class ContentListComments extends BaseCommand {
       required: false,
     }),
     cursor: Flags.string({
-      description: 'Cursor from a previous response to fetch the next page of top-level comments (replies are not paged)',
+      description:
+        'Cursor from a previous response to fetch the next page of top-level comments (replies are not paged)',
       required: false,
     }),
     limit: Flags.integer({
@@ -48,7 +48,7 @@ export default class ContentListComments extends BaseCommand {
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
     if (!auth) {
-      this.error(`Missing authentication config.`)
+      this.error(`Missing authentication config.`, {exit: 1})
     }
 
     const result = await getFooterComments(auth, args.pageId, {

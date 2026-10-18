@@ -25,7 +25,7 @@ export default class ContentAttachment extends BaseCommand {
     const {loadAuthConfig} = createProfileManager(this.config, flags.profile, 'conni-config.json')
     const auth = await loadAuthConfig()
     if (!auth) {
-      this.error(`Missing authentication config.`)
+      this.error(`Missing authentication config.`, {exit: 1})
     }
 
     action.start(`Uploading attachment "${args.file}" to page ${args.pageId}`)

@@ -2,6 +2,7 @@ import {expect} from 'chai'
 
 import {cleanupRun, fixtureTitle, RUN_ID, seedPage, SHARED_LABEL} from './fixtures.js'
 import {
+  CQL_INDEX_BUDGET_MS,
   createConfigDir,
   E2E_EMPTY_LABEL,
   E2E_SPACE,
@@ -69,6 +70,7 @@ describe('e2e: read operations', () => {
       async () =>
         runCliJson<{data: SearchResults; success: boolean}>(['conni', 'content', 'search', runCql], configDir),
       (result) => result.data.results.some((page) => page.id === pageId),
+      CQL_INDEX_BUDGET_MS,
     )
 
     expect(payload.success).to.be.true
@@ -83,6 +85,7 @@ describe('e2e: read operations', () => {
       async () =>
         runCliJson<{data: SearchResults; success: boolean}>(['conni', 'content', 'search', runCql], configDir),
       (result) => result.data.results.length >= 2,
+      CQL_INDEX_BUDGET_MS,
     )
     expect(unlimited.data.results.length).to.be.at.least(2)
 
@@ -97,6 +100,7 @@ describe('e2e: read operations', () => {
           configDir,
         ),
       (result) => result.data.results.length > 0,
+      CQL_INDEX_BUDGET_MS,
     )
     expect(limited.data.limit).to.equal(1)
     expect(limited.data.results.length).to.equal(1)
